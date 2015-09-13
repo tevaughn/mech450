@@ -44,4 +44,6 @@ bool isValidSquare(double x, double y, double theta, double sideLength, const st
 // and whether or not each configuation should be valid or not.
 void debugMode(const std::vector<Robot>& robots, const std::vector<Rectangle>& obstacles, const std::vector<bool>& valid);
 
+double dist (double x1, double y1, double x2, double y2);
+
 #endif
