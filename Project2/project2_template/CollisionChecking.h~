@@ -41,8 +41,8 @@ bool isValidCircle(double x, double y, double radius, const std::vector<Rectangl
 bool isValidSquare(double x, double y, double theta, double sideLength, const std::vector<Rectangle>& obstacles);
 
 
-double rotatedX(double qx, double qy, double theta, double x, double y);
-double rotatedY(double qx, double qy, double theta, double x, double y);
+double rotatedX(double x, double y, double theta);
+double rotatedY(double x, double y, double theta);
 
 bool checkLineToRect(double point1x, double point1y, double point2x, double point2y, Rectangle rect);
 
