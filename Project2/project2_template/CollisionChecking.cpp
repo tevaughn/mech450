@@ -6,6 +6,7 @@
 //////////////////////////////////////
 
 #include "CollisionChecking.h"
+#include <cmath>
 
 // Intersect the point (x,y) with the set of rectangles.  If the point lies outside of all obstacles, return true.
 bool isValidPoint(double x, double y, const std::vector<Rectangle>& obstacles)
@@ -16,6 +17,24 @@ bool isValidPoint(double x, double y, const std::vector<Rectangle>& obstacles)
 		}
 	}
     return true;
+
+}
+
+bool doesVerticeInstersectCircle(double x, double y, double radius, Rectangle rect) {
+	double rad2 = pow(radius, 2);
+	double xmin2 = pow(rect.x - x, 2);
+	double xmax2 = pow(x - (rect.x + rect.width), 2);
+	double ymin2 = pow(rect.y - y , 2);
+	double ymax2 = pow(y - (rect.y + rect.height), 2);
+	
+	if (( (xmin2 + ymin2) <= rad2 ) ||
+		( (xmax2 + ymin2) <= rad2 ) ||
+		( (xmin2 + ymax2) <= rad2 ) ||
+		( (xmax2 + ymax2) <= rad2 )) {
+		return true; // not all vertices are > r from center of circle
+	}
+
+	return false;
 }
 
 // Intersect a circle with center (x,y) and given radius with the set of rectangles.  If the circle
@@ -48,6 +67,7 @@ bool isValidCircle(double x, double y, double radius, const std::vector<Rectangl
 double dist (double x1, double y1, double x2, double y2) {
     return sqrt(pow((y2-y1), 2) + pow((x2-x1), 2));
 }
+
 
 // Intersect a square with center at (x,y), orientation theta, and the given side length with the set of rectangles.
 // If the square lies outside of all obstacles, return true
