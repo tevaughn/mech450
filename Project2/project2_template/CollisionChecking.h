@@ -56,4 +56,4 @@ void debugMode(const std::vector<Robot>& robots, const std::vector<Rectangle>& o
 double dist (double x1, double y1, double x2, double y2);
 
 #endif
-#endif
+
