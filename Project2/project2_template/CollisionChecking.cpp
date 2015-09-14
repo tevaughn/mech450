@@ -25,17 +25,13 @@ bool isValidCircle(double x, double y, double radius, const std::vector<Rectangl
 
     for (Rectangle rect : obstacles) {
 
-        //line 1
-        if ((rect.x - radius <= x) && (x <= rect.x + rect.width + radius) && (rect.y <= y) && (y <= rect.y + rect.height)) {
+        //check if center intersects extended rectangle
+        if ((rect.x - radius <= x) && (x <= rect.x + rect.width + radius) && (rect.y <= y) && (y <= rect.y + rect.height))
             return false;
-        }
-
-        //line 2
-        else if ((rect.x <= x) && (x <= rect.x + rect.width) && (rect.y - radius <= y) && (y <= rect.y + rect.height + radius)) {
+        else if ((rect.x <= x) && (x <= rect.x + rect.width) && (rect.y - radius <= y) && (y <= rect.y + rect.height + radius))
             return false;
-        }
 
-        //line 3
+        //check euclidean distance
         else if (dist(rect.x, rect.y, x, y) <= radius)
             return false;
         else if (dist(rect.x + rect.width, rect.y, x, y) <= radius)
