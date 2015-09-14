@@ -53,4 +53,7 @@ bool doLineSegmentsIntersect(double A1x, double A1y, double A2x, double A2y, dou
 // and whether or not each configuation should be valid or not.
 void debugMode(const std::vector<Robot>& robots, const std::vector<Rectangle>& obstacles, const std::vector<bool>& valid);
 
+double dist (double x1, double y1, double x2, double y2);
+
+#endif
 #endif
