@@ -88,11 +88,12 @@ bool isValidSquare(double x, double y, double theta, double sideLength, const st
 	double brX, brY;
 
 
-	lowerX = x - halfLength;
-	lowerY = y - halfLength;
-	upperX = x + halfLength;
-	upperY = y + halfLength;
-	
+	lowerX = -halfLength;
+	lowerY = -halfLength;
+	upperX = halfLength;
+	upperY = halfLength;
+
+
 	blX = rotatedX(lowerX, lowerY, theta, x, y);
 	blY = rotatedY(lowerX, lowerY, theta, x, y);
 	tlX = rotatedX(lowerX, upperY, theta, x, y);
@@ -102,21 +103,27 @@ bool isValidSquare(double x, double y, double theta, double sideLength, const st
 	brX = rotatedX(upperX, lowerY, theta, x, y);
 	brY = rotatedY(upperX, lowerY, theta, x, y);
 
+	std::cout << "(" << x << "," << y << ") -> theta:" << theta << " bl:(" << blX << "," << blY << "), tl:(" << tlX << "," << tlY << ") \n";
+
+	int rectCount = -1;
+
 	for (Rectangle rect: obstacles) {
+		rectCount++;
+
 		if (checkLineToRect(blX, blY, tlX, tlY, rect)) {
-			std::cout << "returning false a\n";
+			std::cout << "returning false, intersects robot's left " << rectCount << "\n";
 			return false;
 		}
 		if (checkLineToRect(tlX, tlY, trX, trY, rect)) {
-			std::cout << "returning false b\n";
+			std::cout << "returning false, intersects robot's top " << rectCount << "\n";
 			return false;
 		}
 		if (checkLineToRect(blX, blY, brX, brY, rect)) {
-			std::cout << "returning false c\n";
+			std::cout << "returning false, intersects robot's bottom " << rectCount << "\n";
 			return false;
 		}
 		if (checkLineToRect(brX, brY, trX, trY, rect)) {
-			std::cout << "returning false d\n";
+			std::cout << "returning false, intersects robot's right " << rectCount << "\n";
 			return false;
 		}
 	}
@@ -137,51 +144,50 @@ double rotatedY(double qx, double qy, double theta, double x, double y) {
 bool checkLineToRect(double point1x, double point1y, double point2x, 
 		double point2y, Rectangle rect) {
 	
-	return (
-		doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x, rect.y, rect.x, rect.y+rect.height) || 
-		doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x, rect.y, rect.x+rect.width, rect.y) || 
-		doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x, rect.y+rect.height, rect.x+rect.width, rect.y+rect.height) || 
-		doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x+rect.width, rect.y, rect.x+rect.width, rect.y+rect.height));
+	if (doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x, rect.y, rect.x, rect.y+rect.height) ) {
+		std::cout << "intersects left side\n";		
+		return true;
+	}
+	if (doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x, rect.y, rect.x+rect.width, rect.y)) {
+		std::cout << "intersects bottom side\n";	
+		return true;
+	}
+	if (doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x, rect.y+rect.height, rect.x+rect.width, rect.y+rect.height)) {
+		std::cout << "intersects top side\n";	
+		return true;	
+	}
+	if (doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x+rect.width, rect.y, rect.x+rect.width, rect.y+rect.height)) {
+		std::cout << "intersects right side\n";	
+		return true;
+	}
+	
+	return false;
 
 }
 
+bool between(double low, double high, double target) {
+	
+	if ( ((target >= low) && (target <= high)) || ((target <= low) && (target >= high))  ) {
+		return true;	
+	}
+	return false;
+}
+
+// Returns true if they intersect
 bool doLineSegmentsIntersect(double robotPoint1x, double robotPoint1y, 
 	double robotPoint2x, double robotPoint2y, double obstaclePoint1x, 
 	double obstaclePoint1y, double obstaclePoint2x, double obstaclePoint2y) {
 
-	// calculate slopes
+	// calculate slopes y2-y1/x2-x1
 	double mRobot = (robotPoint2y - robotPoint1y) / (robotPoint2x - robotPoint1x);
 	double mObstacle = (obstaclePoint2y - obstaclePoint1y) / (obstaclePoint2x - obstaclePoint1x);
 
-	// calculate y-intercepts
+	// calculate y-intercepts b = -mx + y
 	double bRobot = (mRobot * -robotPoint1x) + robotPoint1y;
 	double bObstacle = (mObstacle * -obstaclePoint1x) + obstaclePoint1y;
 
-	// both segments have the same slope
+	// if both line segments have the same slope, we assume they don't intersect
 	if (mRobot == mObstacle) {
-		
-		//std::cout << "equal slopes of " << mRobot << " and " << mObstacle << "\n";
-		/*
-		if (bRobot != bObstacle) {
-			std::cout << "brobot parallel to bobstacle\n";
-			return false;		
-		}
-		else if ((((robotPoint1x < obstaclePoint1x) && (obstaclePoint1x < robotPoint2x)) || ((robotPoint2x < obstaclePoint1x) && (obstaclePoint1x < robotPoint1x))) && (((robotPoint1y < obstaclePoint1y) && (obstaclePoint1y < robotPoint2y)) || ((robotPoint2y < obstaclePoint1y) && (obstaclePoint1y < robotPoint1y)))) {
-			std::cout << "why is this happening a\n";
-			return true;
-		}
-		else if ((((robotPoint1x < obstaclePoint2x) && (obstaclePoint2x < robotPoint2x)) || ((robotPoint2x < obstaclePoint2x) && (obstaclePoint2x < robotPoint1x))) && (((robotPoint1y < obstaclePoint2y) && (obstaclePoint2y < robotPoint2y)) || ((robotPoint2y < obstaclePoint2y) && (obstaclePoint2y < robotPoint1y)))) {
-			std::cout << "why is this happening b\n";
-			return true;
-		}
-
-		if (mObstacle == INFINITY) {
-			((obstaclePoint1y > robotPoint1y && obstaclePoint1y > robotPoint2y) || (obstaclePoint2y > robotPoint1y && obstaclePoint2y > robotPoint2y)
-		}
-		else {
-			std::cout << "brobot and bobstacle are the same but don't intersect\n";
-			return false;
-		}*/
 		return false;
 	}
 
@@ -189,23 +195,25 @@ bool doLineSegmentsIntersect(double robotPoint1x, double robotPoint1y,
 
 	if (mObstacle == INFINITY) {
 		x = obstaclePoint1x;
-		y = mRobot*x + bRobot;	
+		y = mRobot*x + bRobot;
 	} else {
-		y = obstaclePoint1y;
-		x = (y - bRobot)/mRobot;	
+		y = bObstacle;
+		if (mRobot == INFINITY) {
+			x = robotPoint1x;
+		} else if (mRobot == 0 ){
+			x = obstaclePoint1x;
+		} else {
+			x = (y - bRobot)/mRobot;
+		}	
 	}
 
-	std::cout << "mobstacle = " << mObstacle << "  mrobot = " << mRobot << "\n";
-	std::cout << "x-intersection = " << x << " y-interception = " << y << "\n";
 
-	if (((((robotPoint1x <= x) && (x <= robotPoint2x)) 
-		|| ((robotPoint2x <= x) && (x <= robotPoint1x))) 
-		&& (((robotPoint1y <= y) && (y <= robotPoint2y)) 
-		|| ((robotPoint2y <= y) && (y <= robotPoint1y)))) 
-		&& ((((obstaclePoint1x <= x) && (x <= obstaclePoint2x)) 
-		|| ((obstaclePoint2x <= x) && (x <= obstaclePoint1x))) 
-		&& (((obstaclePoint1y <= y) && (y <= obstaclePoint2y)) 
-		|| ((obstaclePoint2y <= y) && (y <= obstaclePoint1y))))) {
+	std::cout << "mobstacle = " << mObstacle << "  mrobot = " << mRobot << "\n";
+	std::cout << "x-intersection = " << x << " y-interception = " << y << " robot line:(" << robotPoint1x << "," << robotPoint1y << "),(" << robotPoint2x << "," << robotPoint2y << ") obstacle line:(" << obstaclePoint1x << "," << obstaclePoint1y << "),(" << obstaclePoint2x << "," << obstaclePoint2y << ")\n";
+
+	// if the x,y point of intersection exists between both line segments end points, then the lines intersect
+	if ( between(robotPoint1x, robotPoint2x, x) && between(robotPoint1y, robotPoint2y, y) &&
+			between(obstaclePoint1x, obstaclePoint2x, x) && between(obstaclePoint1y, obstaclePoint2y, y) ) {
 		return true;
 	}
 	return false;
