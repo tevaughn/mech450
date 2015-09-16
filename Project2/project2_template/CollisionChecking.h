@@ -48,6 +48,8 @@ bool checkLineToRect(double point1x, double point1y, double point2x, double poin
 
 bool doLineSegmentsIntersect(double A1x, double A1y, double A2x, double A2y, double B1x, double B1y, double B2x, double B2y);
 
+bool between(double low, double high, double target);
+
 
 // Custom debugging/development code.  Takes the list of robots, the list of obstacles,
 // and whether or not each configuation should be valid or not.

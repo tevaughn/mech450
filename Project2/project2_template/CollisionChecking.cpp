@@ -21,22 +21,6 @@ bool isValidPoint(double x, double y, const std::vector<Rectangle>& obstacles)
 
 }
 
-bool doesVerticeInstersectCircle(double x, double y, double radius, Rectangle rect) {
-	double rad2 = pow(radius, 2);
-	double xmin2 = pow(rect.x - x, 2);
-	double xmax2 = pow(x - (rect.x + rect.width), 2);
-	double ymin2 = pow(rect.y - y , 2);
-	double ymax2 = pow(y - (rect.y + rect.height), 2);
-	
-	if (( (xmin2 + ymin2) <= rad2 ) ||
-		( (xmax2 + ymin2) <= rad2 ) ||
-		( (xmin2 + ymax2) <= rad2 ) ||
-		( (xmax2 + ymax2) <= rad2 )) {
-		return true; // not all vertices are > r from center of circle
-	}
-
-	return false;
-}
 
 // Intersect a circle with center (x,y) and given radius with the set of rectangles.  If the circle
 // lies outside of all obstacles, return true
@@ -103,32 +87,31 @@ bool isValidSquare(double x, double y, double theta, double sideLength, const st
 	brX = rotatedX(upperX, lowerY, theta, x, y);
 	brY = rotatedY(upperX, lowerY, theta, x, y);
 
-	std::cout << "(" << x << "," << y << ") -> theta:" << theta << " bl:(" << blX << "," << blY << "), tl:(" << tlX << "," << tlY << ") \n";
-
 	int rectCount = -1;
 
 	for (Rectangle rect: obstacles) {
 		rectCount++;
+	
+		//Check if square center is inside rectangle
+		if (between(rect.x, rect.x + rect.width, x) && between(rect.y, 	
+			rect.y + rect.height, y))  {
+			return false;
+		}
 
 		if (checkLineToRect(blX, blY, tlX, tlY, rect)) {
-			std::cout << "returning false, intersects robot's left " << rectCount << "\n";
 			return false;
 		}
 		if (checkLineToRect(tlX, tlY, trX, trY, rect)) {
-			std::cout << "returning false, intersects robot's top " << rectCount << "\n";
 			return false;
 		}
 		if (checkLineToRect(blX, blY, brX, brY, rect)) {
-			std::cout << "returning false, intersects robot's bottom " << rectCount << "\n";
 			return false;
 		}
 		if (checkLineToRect(brX, brY, trX, trY, rect)) {
-			std::cout << "returning false, intersects robot's right " << rectCount << "\n";
 			return false;
 		}
 	}
 
-	std::cout << "returning true\n";
     return true;
 }
 
@@ -144,20 +127,16 @@ double rotatedY(double qx, double qy, double theta, double x, double y) {
 bool checkLineToRect(double point1x, double point1y, double point2x, 
 		double point2y, Rectangle rect) {
 	
-	if (doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x, rect.y, rect.x, rect.y+rect.height) ) {
-		std::cout << "intersects left side\n";		
+	if (doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x, rect.y, rect.x, rect.y+rect.height) ) {	
 		return true;
 	}
 	if (doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x, rect.y, rect.x+rect.width, rect.y)) {
-		std::cout << "intersects bottom side\n";	
 		return true;
 	}
 	if (doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x, rect.y+rect.height, rect.x+rect.width, rect.y+rect.height)) {
-		std::cout << "intersects top side\n";	
 		return true;	
 	}
 	if (doLineSegmentsIntersect(point1x, point1y, point2x, point2y, rect.x+rect.width, rect.y, rect.x+rect.width, rect.y+rect.height)) {
-		std::cout << "intersects right side\n";	
 		return true;
 	}
 	
@@ -208,8 +187,6 @@ bool doLineSegmentsIntersect(double robotPoint1x, double robotPoint1y,
 	}
 
 
-	std::cout << "mobstacle = " << mObstacle << "  mrobot = " << mRobot << "\n";
-	std::cout << "x-intersection = " << x << " y-interception = " << y << " robot line:(" << robotPoint1x << "," << robotPoint1y << "),(" << robotPoint2x << "," << robotPoint2y << ") obstacle line:(" << obstaclePoint1x << "," << obstaclePoint1y << "),(" << obstaclePoint2x << "," << obstaclePoint2y << ")\n";
 
 	// if the x,y point of intersection exists between both line segments end points, then the lines intersect
 	if ( between(robotPoint1x, robotPoint2x, x) && between(robotPoint1y, robotPoint2y, y) &&
