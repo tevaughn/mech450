@@ -36,14 +36,30 @@ bool isValidPoint(double x, double y, const std::vector<Rectangle>& obstacles);
 // lies outside of all obstacles, return true
 bool isValidCircle(double x, double y, double radius, const std::vector<Rectangle>& obstacles);
 
+// euclidean distance between two points
+double dist (double x1, double y1, double x2, double y2);
+
 // Intersect a square with center at (x,y), orientation theta, and the given side length with the set of rectangles.
 // If the square lies outside of all obstacles, return true
 bool isValidSquare(double x, double y, double theta, double sideLength, const std::vector<Rectangle>& obstacles);
+
+// rotate and transform x and y coordinates of robots
+double rotatedX(double qx, double qy, double theta, double x, double y);
+double rotatedY(double qx, double qy, double theta, double x, double y);
+
+// check if a line intersects a given rectangle
+bool checkLineToRect(double point1x, double point1y, double point2x, double point2y, Rectangle rect);
+
+// find if two line segments intersect, given their endpoints
+bool doLineSegmentsIntersect(double A1x, double A1y, double A2x, double A2y, double B1x, double B1y, double B2x, double B2y);
+
+// check if low <= target <= high or vice versa
+bool between(double low, double high, double target);
+
 
 // Custom debugging/development code.  Takes the list of robots, the list of obstacles,
 // and whether or not each configuation should be valid or not.
 void debugMode(const std::vector<Robot>& robots, const std::vector<Rectangle>& obstacles, const std::vector<bool>& valid);
 
-double dist (double x1, double y1, double x2, double y2);
-
 #endif
+
