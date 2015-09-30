@@ -15,7 +15,6 @@ ompl::geometric::RandomTree::RandomTree(const base::SpaceInformationPtr &si) : b
     maxDistance_ = 0.0;
     lastGoalMotion_ = NULL;
 
-<<<<<<< HEAD
     Planner::declareParam<double>("range", this, &RandomTree::setRange, &RandomTree::getRange, "0.:1.:10000.");
     Planner::declareParam<double>("goal_bias", this, &RandomTree::setGoalBias, &RandomTree::getGoalBias, "0.:.05:1.");
 }
