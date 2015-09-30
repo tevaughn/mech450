@@ -1,3 +1,4 @@
+#test
 OMPL_DIR = /usr
 CXXFLAGS = -O2 # change to -g when debugging code
 INCLUDE_FLAGS = -I${OMPL_DIR}/include
