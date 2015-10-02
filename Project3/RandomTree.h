@@ -32,157 +32,126 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-/* Author: Ioan Sucan */
-
 #ifndef OMPL_GEOMETRIC_PLANNERS_RandomTree
 #define OMPL_GEOMETRIC_PLANNERS_RandomTree
 
 #include "ompl/geometric/planners/PlannerIncludes.h"
-#include "ompl/datastructures/NearestNeighbors.h"
+//#include "ompl/datastructures/NearestNeighbors.h"
 
 namespace ompl
 {
+namespace geometric
+{
 
-    namespace geometric
-    {
+	/*
+		Random Tree
 
-        /**
-           @anchor gRRT
-           @par Short description
-           RRT is a tree-based motion planner that uses the following
-           idea: RRT samples a random state @b qr in the state space,
-           then finds the state @b qc among the previously seen states
-           that is closest to @b qr and expands from @b qc towards @b
-           qr, until a state @b qm is reached. @b qm is then added to
-           the exploration tree.
-           @par External documentation
-           J. Kuffner and S.M. LaValle, RRT-connect: An efficient approach to single-query path planning, in <em>Proc. 2000 IEEE Intl. Conf. on Robotics and Automation</em>, pp. 995–1001, Apr. 2000. DOI: [10.1109/ROBOT.2000.844730](http://dx.doi.org/10.1109/ROBOT.2000.844730)<br>
-           [[PDF]](http://ieeexplore.ieee.org/ielx5/6794/18246/00844730.pdf?tp=&arnumber=844730&isnumber=18246)
-           [[more]](http://msl.cs.uiuc.edu/~lavalle/rrtpubs.html)
-        */
+		Finds a path from start point to goal with following method:
+		Pick random configuration A on tree, sample new random 
+		configuration B in the space, with goal_bias probability
+		of choosing the goal space. Determine if path AB is
+		collision free. If so, add path AB to tree. Else, discard B.
+		Repeat until goal has been added to tree	
+	*/
 
-        /** \brief Rapidly-exploring Random Trees */
-        class RandomTree : public base::Planner
+	/* Random Tree */
+	class RandomTree : public base::Planner {
+		public:
+
+		/* Constructor */
+		RandomTree(const base::SpaceInformationPtr &spaceInfo);
+
+		virtual ~RandomTree();
+		virtual void getPlannerData(base::PlannerData &data) const;
+		virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &terminationCondition);
+		virtual void clear();
+
+        /*
+			Set the goal bias
+
+		    In the process of randomly selecting states in
+		    the state space to attempt to go towards, the
+		    algorithm may in fact choose the actual goal state, if
+		    it knows it, with some probability. This probability
+		    is a real number between 0.0 and 1.0. 0.05 is default 
+		*/
+
+        void setGoalBias(double goalBias) {
+            goalBias_ = goalBias;
+        }
+
+        double getGoalBias() const {
+            return goalBias_;
+        }
+
+        /*
+			Set the range the planner is supposed to use.
+
+            This parameter greatly influences the runtime of the
+            algorithm. It represents the maximum length of a
+            motion to be added in the tree of motions. 
+		*/
+        void setRange(double distance) {
+            maxDistance_ = distance;
+        }
+        double getRange() const {
+            return maxDistance_;
+        }
+
+        virtual void setup();
+
+    protected:
+
+
+        /* 
+			Nodes on Random Tree
+
+            Contains state (position) and pointer to parent motion
+		*/
+        class Node
         {
         public:
 
-            /** \brief Constructor */
-            RandomTree(const base::SpaceInformationPtr &si);
-
-            virtual ~RandomTree();
-
-            virtual void getPlannerData(base::PlannerData &data) const;
-
-            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
-
-            virtual void clear();
-
-            /** \brief Set the goal bias
-
-                In the process of randomly selecting states in
-                the state space to attempt to go towards, the
-                algorithm may in fact choose the actual goal state, if
-                it knows it, with some probability. This probability
-                is a real number between 0.0 and 1.0; its value should
-                usually be around 0.05 and should not be too large. It
-                is probably a good idea to use the default value. */
-            void setGoalBias(double goalBias)
+            Node() : state(NULL), parent(NULL)
             {
-                goalBias_ = goalBias;
             }
 
-            /** \brief Get the goal bias the planner is using */
-            double getGoalBias() const
-            {
-                return goalBias_;
-            }
+            /* Constructor that allocates memory for the state */
+            Node(const base::SpaceInformationPtr &spaceInfo) : state(spaeInfo->allocState()), parent(NULL) {}
+            ~Node() {}
 
-            /** \brief Set the range the planner is supposed to use.
+            /* The state (position) contained by the node */
+            base::State	*state;
 
-                This parameter greatly influences the runtime of the
-                algorithm. It represents the maximum length of a
-                motion to be added in the tree of motions. */
-            void setRange(double distance)
-            {
-                maxDistance_ = distance;
-            }
+            /* The parent node in the exploration tree */
+            Node		*parent;
 
-            /** \brief Get the range the planner is using */
-            double getRange() const
-            {
-                return maxDistance_;
-            }
-
-            /** \brief Set a different nearest neighbors datastructure */
-            template<template<typename T> class NN>
-            void setNearestNeighbors()
-            {
-                nn_.reset(new NN<Motion*>());
-            }
-
-            virtual void setup();
-
-        protected:
-
-
-            /** \brief Representation of a motion
-
-                This only contains pointers to parent motions as we
-                only need to go backwards in the tree. */
-            class Motion
-            {
-            public:
-
-                Motion() : state(NULL), parent(NULL)
-                {
-                }
-
-                /** \brief Constructor that allocates memory for the state */
-                Motion(const base::SpaceInformationPtr &si) : state(si->allocState()), parent(NULL)
-                {
-                }
-
-                ~Motion()
-                {
-                }
-
-                /** \brief The state contained by the motion */
-                base::State       *state;
-
-                /** \brief The parent motion in the exploration tree */
-                Motion            *parent;
-
-            };
-
-            /** \brief Free the memory allocated by this planner */
-            void freeMemory();
-
-            /** \brief Compute distance between motions (actually distance between contained states) */
-            double distanceFunction(const Motion *a, const Motion *b) const
-            {
-                return si_->distance(a->state, b->state);
-            }
-
-            /** \brief State sampler */
-            base::StateSamplerPtr                          sampler_;
-
-            /** \brief A nearest-neighbors datastructure containing the tree of motions */
-            boost::shared_ptr< NearestNeighbors<Motion*> > nn_;
-
-            /** \brief The fraction of time the goal is picked as the state to expand towards (if such a state is available) */
-            double                                         goalBias_;
-
-            /** \brief The maximum length of a motion to be added to a tree */
-            double                                         maxDistance_;
-
-            /** \brief The random number generator */
-            RNG                                            rng_;
-
-            /** \brief The most recent goal motion.  Used for PlannerData computation */
-            Motion                                         *lastGoalMotion_;
         };
 
-    }
+        /* Free the memory allocated by this planner */
+        void freeMemory();
+
+
+        /* State sampler */
+        base::StateSamplerPtr	sampler_;
+
+        /* The probability goal state is picked over random sample for configuration B */
+        double				goalBias_;
+
+        /* The maximum length of a motion to be added to a tree */
+        double				maxDistance_;
+
+        /* The random number generator */
+        RNG					rng_;
+
+        /* Most recent goal motion.  Used for PlannerData computation */
+        Node				*lastGoalMotion_;
+
+		/* Vector storing pointers to all nodes in the tree for choosing random node A */
+		boost::shared_ptr< std::vector<Node*> > 	nodes_;
+    };
+
+}
 }
 
 #endif
