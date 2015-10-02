@@ -1,55 +1,13 @@
-<<<<<<< HEAD
+
 /* Author: Team Sean */
 
 #include "RandomTree.h"
-=======
-/*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2008, Willow Garage, Inc.
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Willow Garage nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
-
-/* Author: Ioan Sucan */
-
-#include "ompl/geometric/planners/rrt/RRT.h"
->>>>>>> e24854b918a457d822bea2d9088eb0d94400ea4e
 #include "ompl/base/goals/GoalSampleableRegion.h"
 #include "ompl/tools/config/SelfConfig.h"
 #include <limits>
 
-<<<<<<< HEAD
+
 ompl::geometric::RandomTree::RandomTree(const base::SpaceInformationPtr &si) : base::Planner(si, "RandomTree")
-=======
-ompl::geometric::RRT::RRT(const base::SpaceInformationPtr &si) : base::Planner(si, "RRT")
->>>>>>> e24854b918a457d822bea2d9088eb0d94400ea4e
 {
     specs_.approximateSolutions = true;
     specs_.directed = true;
@@ -58,28 +16,19 @@ ompl::geometric::RRT::RRT(const base::SpaceInformationPtr &si) : base::Planner(s
     maxDistance_ = 0.0;
     lastGoalMotion_ = NULL;
 
-<<<<<<< HEAD
+
     Planner::declareParam<double>("range", this, &RandomTree::setRange, &RandomTree::getRange, "0.:1.:10000.");
     Planner::declareParam<double>("goal_bias", this, &RandomTree::setGoalBias, &RandomTree::getGoalBias, "0.:.05:1.");
 }
 
 ompl::geometric::RandomTree::~RandomTree()
-=======
-    Planner::declareParam<double>("range", this, &RRT::setRange, &RRT::getRange, "0.:1.:10000.");
-    Planner::declareParam<double>("goal_bias", this, &RRT::setGoalBias, &RRT::getGoalBias, "0.:.05:1.");
-}
 
-ompl::geometric::RRT::~RRT()
->>>>>>> e24854b918a457d822bea2d9088eb0d94400ea4e
 {
     freeMemory();
 }
 
-<<<<<<< HEAD
+
 void ompl::geometric::RandomTree::clear()
-=======
-void ompl::geometric::RRT::clear()
->>>>>>> e24854b918a457d822bea2d9088eb0d94400ea4e
 {
     Planner::clear();
     sampler_.reset();
@@ -89,11 +38,8 @@ void ompl::geometric::RRT::clear()
     lastGoalMotion_ = NULL;
 }
 
-<<<<<<< HEAD
+
 void ompl::geometric::RandomTree::setup()
-=======
-void ompl::geometric::RRT::setup()
->>>>>>> e24854b918a457d822bea2d9088eb0d94400ea4e
 {
     Planner::setup();
     tools::SelfConfig sc(si_, getName());
@@ -101,17 +47,11 @@ void ompl::geometric::RRT::setup()
 
     if (!nn_)
         nn_.reset(tools::SelfConfig::getDefaultNearestNeighbors<Motion*>(si_->getStateSpace()));
-<<<<<<< HEAD
+
     nn_->setDistanceFunction(boost::bind(&RandomTree::distanceFunction, this, _1, _2));
 }
 
 void ompl::geometric::RandomTree::freeMemory()
-=======
-    nn_->setDistanceFunction(boost::bind(&RRT::distanceFunction, this, _1, _2));
-}
-
-void ompl::geometric::RRT::freeMemory()
->>>>>>> e24854b918a457d822bea2d9088eb0d94400ea4e
 {
     if (nn_)
     {
@@ -126,11 +66,8 @@ void ompl::geometric::RRT::freeMemory()
     }
 }
 
-<<<<<<< HEAD
+
 ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::PlannerTerminationCondition &ptc)
-=======
-ompl::base::PlannerStatus ompl::geometric::RRT::solve(const base::PlannerTerminationCondition &ptc)
->>>>>>> e24854b918a457d822bea2d9088eb0d94400ea4e
 {
     checkValidity();
     base::Goal                 *goal   = pdef_->getGoal().get();
@@ -244,11 +181,8 @@ ompl::base::PlannerStatus ompl::geometric::RRT::solve(const base::PlannerTermina
     return base::PlannerStatus(solved, approximate);
 }
 
-<<<<<<< HEAD
+
 void ompl::geometric::RandomTree::getPlannerData(base::PlannerData &data) const
-=======
-void ompl::geometric::RRT::getPlannerData(base::PlannerData &data) const
->>>>>>> e24854b918a457d822bea2d9088eb0d94400ea4e
 {
     Planner::getPlannerData(data);
 
@@ -268,3 +202,4 @@ void ompl::geometric::RRT::getPlannerData(base::PlannerData &data) const
                          base::PlannerDataVertex(motions[i]->state));
     }
 }
+
