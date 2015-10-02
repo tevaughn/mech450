@@ -6,6 +6,7 @@
 #include "ompl/tools/config/SelfConfig.h"
 #include <limits>
 
+
 ompl::geometric::RandomTree::RandomTree(const base::SpaceInformationPtr &spaceInfo) : base::Planner(spaceInfo, "RandomTree") {
     specs_.approximateSolutions = true;
     specs_.directed = true;
@@ -13,6 +14,7 @@ ompl::geometric::RandomTree::RandomTree(const base::SpaceInformationPtr &spaceIn
     goalBias_ = 0.05;
     maxDistance_ = 0.0;
     lastGoalMotion_ = NULL;
+    spaceInfo_ = NULL;
 
     Planner::declareParam<double>("range", this, &RandomTree::setRange, &RandomTree::getRange, "0.:1.:10000.");
     Planner::declareParam<double>("goal_bias", this, &RandomTree::setGoalBias, &RandomTree::getGoalBias, "0.:.05:1.");
@@ -43,7 +45,7 @@ void ompl::geometric::RandomTree::setup() {
 		nodes_.reset();
 	}
 
-	nodes_->push_back(Node(spaceInfo_->getStateSpace(), NULL));
+	nodes_->push_back(Node(spaceInfo_->getStateSpace()));
 }
 
 void ompl::geometric::RandomTree::freeMemory()
@@ -89,7 +91,7 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
 
     Node *solution  = NULL;
     Node *approxsol = NULL;
-    Node *nodeB = new Node(spaceInfo_, NULL);
+    Node *nodeB = new Node(spaceInfo_);
 	Node *nodeA;
 
     while (terminationCondition == false)

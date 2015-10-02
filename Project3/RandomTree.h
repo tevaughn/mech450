@@ -117,14 +117,14 @@ namespace geometric
             }
 
             /* Constructor that allocates memory for the state */
-            Node(const base::SpaceInformationPtr &spaceInfo) : state(spaeInfo->allocState()), parent(NULL) {}
+            Node(const base::SpaceInformationPtr &spaceInfo) : state(spaceInfo->allocState()), parent(NULL) {}
             ~Node() {}
 
             /* The state (position) contained by the node */
             base::State	*state;
 
             /* The parent node in the exploration tree */
-            Node		*parent;
+            Node	*parent;
 
         };
 
@@ -142,14 +142,17 @@ namespace geometric
         double				maxDistance_;
 
         /* The random number generator */
-        RNG					rng_;
+        RNG				rng_;
 
         /* Most recent goal motion.  Used for PlannerData computation */
         Node				*lastGoalMotion_;
 
-		/* Vector storing pointers to all nodes in the tree for choosing random node A */
-		boost::shared_ptr< std::vector<Node*> > 	nodes_;
-    };
+	/* Vector storing pointers to all nodes in the tree for choosing random node A */
+	boost::shared_ptr< std::vector<Node*> > 	nodes_;
+	
+    	const base::SpaceInformationPtr &spaceInfo_;
+		
+	};
 
 }
 }
