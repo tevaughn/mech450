@@ -59,7 +59,7 @@ namespace geometric
 		public:
 
 		/* Constructor */
-		RandomTree(const base::SpaceInformationPtr &spaceInfo);
+		RandomTree(const base::SpaceInformationPtr &si);
 
 		virtual ~RandomTree();
 		virtual void getPlannerData(base::PlannerData &data) const;
@@ -117,7 +117,7 @@ namespace geometric
             }
 
             /* Constructor that allocates memory for the state */
-            Node(const base::SpaceInformationPtr &spaceInfo) : state(spaceInfo->allocState()), parent(NULL) {}
+            Node(const base::SpaceInformationPtr &si) : state(si->allocState()), parent(NULL) {}
             ~Node() {}
 
             /* The state (position) contained by the node */
@@ -148,9 +148,9 @@ namespace geometric
         Node				*lastGoalMotion_;
 
 	/* Vector storing pointers to all nodes in the tree for choosing random node A */
-	boost::shared_ptr< std::vector<Node*> > 	nodes_;
+	std::vector<Node*> 	nodes_;
 	
-    	const base::SpaceInformationPtr &spaceInfo_;
+    	//base::SpaceInformationPtr &spaceInfo_;
 		
 	};
 

@@ -7,14 +7,14 @@
 #include <limits>
 
 
-ompl::geometric::RandomTree::RandomTree(const base::SpaceInformationPtr &spaceInfo) : base::Planner(spaceInfo, "RandomTree") {
+ompl::geometric::RandomTree::RandomTree(const base::SpaceInformationPtr &si) : base::Planner(si, "RandomTree") {
     specs_.approximateSolutions = true;
     specs_.directed = true;
 
     goalBias_ = 0.05;
     maxDistance_ = 0.0;
     lastGoalMotion_ = NULL;
-    spaceInfo_ = NULL;
+    //spaceInfo_ = NULL;
 
     Planner::declareParam<double>("range", this, &RandomTree::setRange, &RandomTree::getRange, "0.:1.:10000.");
     Planner::declareParam<double>("goal_bias", this, &RandomTree::setGoalBias, &RandomTree::getGoalBias, "0.:.05:1.");
@@ -29,8 +29,8 @@ void ompl::geometric::RandomTree::clear() {
     Planner::clear();
     sampler_.reset();
     freeMemory();
-    if (nodes_) {
-        nodes_->clear();
+    if (nodes_.size() > 0) {
+        nodes_.clear();
 	}
     lastGoalMotion_ = NULL;
 }
@@ -38,26 +38,20 @@ void ompl::geometric::RandomTree::clear() {
 
 void ompl::geometric::RandomTree::setup() {
     Planner::setup();
-    tools::SelfConfig sc(spaceInfo_, getName());
+    tools::SelfConfig sc(si_, getName());
     sc.configurePlannerRange(maxDistance_);
-
-	if (!nodes_) {
-		nodes_.reset();
-	}
-
-	nodes_->push_back(Node(spaceInfo_->getStateSpace()));
 }
 
 void ompl::geometric::RandomTree::freeMemory()
 {
-    if (nodes_)
+    if (nodes_.size() > 0)
     {
 
-        for (unsigned int i = 0 ; i < nodes_->size() ; ++i)
+        for (unsigned int i = 0 ; i < nodes_.size() ; ++i)
         {
-            if ((*nodes_)[i]->state)
-                spaceInfo_->freeState((*nodes_)[i]->state);
-            delete (*nodes_)[i];
+            if (nodes_[i]->state)
+                si_->freeState(nodes_[i]->state);
+            delete nodes_[i];
         }
     }
 }
@@ -68,37 +62,37 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
 	// get our goal
     base::Goal                 *goal   = pdef_->getGoal().get();
 	// Can we sample the goal?    
-	base::GoalSampleableRegion *goal_s = dynamic_cast<base::GoalSampleableRegion*>(goal);
+    base::GoalSampleableRegion *goal_s = dynamic_cast<base::GoalSampleableRegion*>(goal);
 
-//    while (const base::State *st = pis_.nextStart())
-//    {
-//        Motion *motion = new Motion(si_);
-//        si_->copyState(motion->state, st);
-//        nn_->add(motion);
-//    }
+    while (const base::State *st = pis_.nextStart())
+    {
+        Node *node = new Node(si_);
+        si_->copyState(node->state, st);
+        nodes_.push_back(node);
+    }
 
-    if (nodes_->size() == 0) {
+    if (nodes_.size() == 0) {
         OMPL_ERROR("%s: There are no valid initial states!", getName().c_str());
         return base::PlannerStatus::INVALID_START;
     }
 
 	// If we haven't created our sampler, do it
     if (!sampler_) {
-        sampler_ = spaceInfo_->allocStateSampler();
+        sampler_ = si_->allocStateSampler();
 	}
 
-    OMPL_INFORM("%s: Starting planning with %u states already in datastructure", getName().c_str(), nn_->size());
+    OMPL_INFORM("%s: Starting planning with %u states already in datastructure", getName().c_str(), nodes_.size());
 
     Node *solution  = NULL;
     Node *approxsol = NULL;
-    Node *nodeB = new Node(spaceInfo_);
-	Node *nodeA;
+    Node *nodeB = new Node(si_);
+    Node *nodeA;
 
     while (terminationCondition == false)
     {
-		/* sample random node */
-		int randomIndex = rand() % nodes_.size();
-		boost::weak_ptr < Node > nodeA = nodes_[randomIndex]; 
+	/* sample random node */
+	int randomIndex = rand() % nodes_.size();
+	Node* nodeA = nodes_[randomIndex]; 
 
         /* sample random state (with goal biasing) */
         if (goal_s && rng_.uniform01() < goalBias_ && goal_s->canSample()) {
@@ -108,13 +102,13 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
 		}
 
 
-		// if no collisions
+        // if no collisions
         if (true) {
-			// Set nodeB parent to nodeA and add to nodes vector
-			nodeB->parent = nodeA;
-            nodes_->push_back(nodeB);
+           // Set nodeB parent to nodeA and add to nodes vector
+            nodeB->parent = nodeA;
+            nodes_.push_back(nodeB);
 
-            bool satisfied = goal->isSatisfied(nodeB->state, 0.0);
+            bool satisfied = goal->isSatisfied(nodeB->state, 0);
             if (satisfied) {
                 solution = nodeB;
                 break;
@@ -145,19 +139,19 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
         }
 
         /* set the solution path */
-        PathGeometric *path = new PathGeometric(spaceInfo_);
+        PathGeometric *path = new PathGeometric(si_);
         for (int i = nodePath.size() - 1 ; i >= 0 ; --i)
             path->append(nodePath[i]->state);
-        pdef_->addSolutionPath(base::PathPtr(path), approximate, approxdif, getName());
+        pdef_->addSolutionPath(base::PathPtr(path), approximate, 0, getName());
         solved = true;
     }
 
-    spaceInfo_->freeState(nodeA);
+    si_->freeState(nodeA->state);
     if (nodeB->state)
-        spaceInfo_->freeState(nodeB->state);
+        si_->freeState(nodeB->state);
     delete nodeB;
 
-    OMPL_INFORM("%s: Created %u states", getName().c_str(), nn_->size());
+    OMPL_INFORM("%s: Created %u states", getName().c_str(), nodes_.size());
 
     return base::PlannerStatus(solved, approximate);
 }
@@ -169,13 +163,13 @@ void ompl::geometric::RandomTree::getPlannerData(base::PlannerData &data) const
     if (lastGoalMotion_)
         data.addGoalVertex(base::PlannerDataVertex(lastGoalMotion_->state));
 
-    for (unsigned int i = 0 ; i < nodes_->size() ; ++i)
+    for (unsigned int i = 0 ; i < nodes_.size() ; ++i)
     {
-        if ((*nodes_)[i]->parent == NULL)
-            data.addStartVertex(base::PlannerDataVertex((*nodes_)[i]->state));
+        if (nodes_[i]->parent == NULL)
+            data.addStartVertex(base::PlannerDataVertex(nodes_[i]->state));
         else
-            data.addEdge(base::PlannerDataVertex((*nodes_)[i]->parent->state),
-                         base::PlannerDataVertex((*nodes_)[i]->state));
+            data.addEdge(base::PlannerDataVertex(nodes_[i]->parent->state),
+                         base::PlannerDataVertex(nodes_[i]->state));
     }
 }
 
