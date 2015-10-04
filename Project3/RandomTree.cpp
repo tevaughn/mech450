@@ -2,6 +2,7 @@
 /* Author: Team Sean */
 
 #include "RandomTree.h"
+
 #include "ompl/base/goals/GoalSampleableRegion.h"
 #include "ompl/tools/config/SelfConfig.h"
 #include <limits>
