@@ -19,7 +19,7 @@
 const int R2  = 1;
 const int SE2 = 2;
 
-// This is our state validitiy checker for checking if our point robot is in collision
+// This is our state validity checker for checking if our point robot is in collision
 bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectangle>& obstacles)
 {
     const ompl::base::RealVectorStateSpace::StateType* r2state;
@@ -228,7 +228,7 @@ int main(int, char **)
     obstacles2.push_back(obstacle);
 
 	//2
-	obstacle.x = .25;
+	obstacle.x = .5;
 	obstacle.y = -1;
 	obstacle.width = .25;
 	obstacle.height = 1.25;
@@ -292,6 +292,8 @@ int main(int, char **)
         case SE2:
 			std::cout << "Running in first environment (5x5 with 8 obstacles)\n";
             planWithSimpleSetup(obstacles1, -5, 5, -3.5, -4.5, 4.5, 4.5, choice);
+            std::cout << "Running in second environment (1x1 with 7 obstacles)\n";
+            planWithSimpleSetup(obstacles2, -1, 1, 0, 0, .9, .9, choice);
             break;
     }
     return 0;
