@@ -66,12 +66,13 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
     while (const base::State *st = pis_.nextStart())
     {
         Node *node = new Node(si_);
+        node->parent = NULL;
         si_->copyState(node->state, st);
         nodes_.push_back(node);
     }
 
     if (nodes_.size() == 0) {
-        OMPL_ERROR("%s: There are no valid initial states RAND!", getName().c_str());
+        OMPL_ERROR("%s: There are no valid initial states", getName().c_str());
         return base::PlannerStatus::INVALID_START;
     }
 
@@ -83,44 +84,47 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
     OMPL_INFORM("%s: Starting planning with %u states already in datastructure", getName().c_str(), nodes_.size());
 
     Node *solution  = NULL;
-    Node *approxsol = NULL;
-    Node *nodeB = new Node(si_);
-    Node *nodeA;
-
+    Node *approxsol = nodes_[0];
     double approxDistToGoal = std::numeric_limits<double>::infinity();
+    //Node *nodeB = new Node(si_);
+    Node *nodeA = nodes_[0];
+    base::State *newState = si_->allocState();
+    
+    while (terminationCondition == false) {
+	    /* sample random node */
 
-    while (terminationCondition == false)
-    {
-	/* sample random node */
-	int randomIndex = rand() % nodes_.size();
-	Node* nodeA = nodes_[randomIndex]; 
+	    int randomIndex = rand() % nodes_.size();
+	    Node* nodeA = nodes_[randomIndex]; 
 
         /* sample random state (with goal biasing) */
         if (goal_s && rng_.uniform01() < goalBias_ && goal_s->canSample()) {
-            goal_s->sampleGoal(nodeB->state);
+            goal_s->sampleGoal(newState);
 		} else {
-            sampler_->sampleUniform(nodeB->state);
+            sampler_->sampleUniform(newState);
 		}
 
-
         // if no collisions
-        if (si_->checkMotion(nodeA->state, nodeB->state)) {
-           // Set nodeB parent to nodeA and add to nodes vector
-            nodeB->parent = nodeA;
-            nodes_.push_back(nodeB);
+        if (si_->checkMotion(nodeA->state, newState)) {
+            // Set nodeB parent to nodeA and add to nodes vector
+            Node *newNode = new Node(si_);
+ 
+            newNode->parent = nodeA;
+            si_->copyState(newNode->state, newState);
+
+            nodes_.push_back(newNode);
 
             // If we made it to the goal, we're done
             double distToGoal = 0.0;
-            bool satisfied = goal->isSatisfied(nodeB->state, &distToGoal);
+            bool satisfied = goal->isSatisfied(newNode->state, &distToGoal);
             if (satisfied) {
                 approxDistToGoal = distToGoal;
-                solution = nodeB;
+                solution = newNode;
                 break;
             }
             if (distToGoal < approxDistToGoal)
             {
                 approxDistToGoal = distToGoal;
-                approxsol = nodeB;
+                approxsol = newNode;
             }
         }
     }
@@ -129,7 +133,7 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
     bool approximate = false;
 
     // If we didn't find a solution, return our closest attempt
-    if (solution == NULL)
+    if (solution == NULL )
     {
         solution = approxsol;
         approximate = true;
@@ -149,19 +153,17 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
 
         /* set the solution path */
         PathGeometric *path = new PathGeometric(si_);
-        for (int i = nodePath.size() - 1 ; i >= 0 ; --i)
+        for (int i = nodePath.size() - 1 ; i >= 0 ; --i) {
             path->append(nodePath[i]->state);
+        }
         pdef_->addSolutionPath(base::PathPtr(path), approximate, approxDistToGoal, getName());
         solved = true;
     }
-
-    si_->freeState(nodeA->state);
-    if (nodeB->state)
-        si_->freeState(nodeB->state);
-    delete nodeB;
+    
+    if (newState)
+        si_->freeState(newState);
 
     OMPL_INFORM("%s: Created %u states", getName().c_str(), nodes_.size());
-
     return base::PlannerStatus(solved, approximate);
 }
 

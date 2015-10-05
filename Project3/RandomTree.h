@@ -36,7 +36,6 @@
 #define OMPL_GEOMETRIC_PLANNERS_RandomTree
 
 #include "ompl/geometric/planners/PlannerIncludes.h"
-//#include "ompl/datastructures/NearestNeighbors.h"
 
 namespace ompl
 {
