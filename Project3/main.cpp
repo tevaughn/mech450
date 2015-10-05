@@ -6,15 +6,31 @@
 
 // Including SimpleSetup.h will pull in MOST of what you need to plan
 #include <ompl/geometric/SimpleSetup.h>
+#include <ompl/base/samplers/UniformValidStateSampler.h>
 
 // Except for the state space definitions and any planners
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/SO2StateSpace.h>
+
+#include <omplapp/config.h>
+#include <omplapp/apps/SE3RigidBodyPlanning.h>
+#include <ompl/tools/benchmark/Benchmark.h>
+
+#include <ompl/geometric/planners/rrt/RRT.h>
+#include <ompl/geometric/planners/est/EST.h>
 #include <ompl/geometric/planners/prm/PRM.h>
 
 // The collision checker produced in project 2
 #include "CollisionChecking.h"
 #include "RandomTree.h"
+
+using namespace ompl;
+
+const int BENCHMARK  = 1;
+const int PLANNER = 2;
+
+const int TWISTY  = 1;
+const int CUBICLES = 2;
 
 const int R2  = 1;
 const int SE2 = 2;
@@ -153,6 +169,121 @@ void planWithSimpleSetup(const std::vector<Rectangle>& obstacles,  int low, int 
     }
 }
 
+base::ValidStateSamplerPtr allocUniformStateSampler(const base::SpaceInformation *si)
+{
+    return base::ValidStateSamplerPtr(new base::UniformValidStateSampler(si));
+}
+
+void benchmark0(std::string& benchmark_name, app::SE3RigidBodyPlanning& setup,
+                double& runtime_limit, double& memory_limit, int& run_count)
+{
+    benchmark_name = std::string("cubicles");
+    std::string robot_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/cubicles_robot.dae";
+    std::string env_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/cubicles_env.dae";
+    setup.setRobotMesh(robot_fname.c_str());
+    setup.setEnvironmentMesh(env_fname.c_str());
+
+    base::ScopedState<base::SE3StateSpace> start(setup.getSpaceInformation());
+    start->setX(-4.96);
+    start->setY(-40.62);
+    start->setZ(70.57);
+    start->rotation().setIdentity();
+
+    base::ScopedState<base::SE3StateSpace> goal(start);
+    goal->setX(200.49);
+    goal->setY(-40.62);
+    goal->setZ(70.57);
+    goal->rotation().setIdentity();
+
+    setup.setStartAndGoalStates(start, goal);
+    setup.getSpaceInformation()->setStateValidityCheckingResolution(0.01);
+    setup.getSpaceInformation()->setValidStateSamplerAllocator(&allocUniformStateSampler);
+    setup.setup();
+
+    std::vector<double> cs(3);
+    cs[0] = 35; cs[1] = 35; cs[2] = 35;
+    setup.getStateSpace()->getDefaultProjection()->setCellSizes(cs);
+
+    runtime_limit = 10.0;
+    memory_limit  = 10000.0; // set high because memory usage is not always estimated correctly
+    run_count     = 25;
+
+}
+
+void benchmark1(std::string& benchmark_name, app::SE3RigidBodyPlanning& setup,
+                double& runtime_limit, double& memory_limit, int& run_count)
+{
+    benchmark_name = std::string("Twistycool");
+    std::string robot_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/Twistycool_robot.dae";
+    std::string env_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/Twistycool_env.dae";
+    setup.setRobotMesh(robot_fname.c_str());
+    setup.setEnvironmentMesh(env_fname.c_str());
+
+    base::ScopedState<base::SE3StateSpace> start(setup.getSpaceInformation());
+    start->setX(270.);
+    start->setY(160.);
+    start->setZ(-200.);
+    start->rotation().setIdentity();
+
+    base::ScopedState<base::SE3StateSpace> goal(start);
+    goal->setX(270.);
+    goal->setY(160.);
+    goal->setZ(-400.);
+    goal->rotation().setIdentity();
+
+    base::RealVectorBounds bounds(3);
+    bounds.setHigh(0,350.);
+    bounds.setHigh(1,250.);
+    bounds.setHigh(2,-150.);
+    bounds.setLow(0,200.);
+    bounds.setLow(1,75.);
+    bounds.setLow(2,-450.);
+    setup.getStateSpace()->as<base::SE3StateSpace>()->setBounds(bounds);
+
+    setup.setStartAndGoalStates(start, goal);
+    setup.getSpaceInformation()->setStateValidityCheckingResolution(0.01);
+
+    runtime_limit = 10.0;
+    memory_limit  = 10000.0; // set high because memory usage is not always estimated correctly
+    run_count     = 25;
+}
+
+void runBenchmarks(int twistycoolORcubicles) {
+
+    app::SE3RigidBodyPlanning setup;
+    std::string benchmark_name;
+    double runtime_limit, memory_limit;
+    int run_count;
+
+    if (twistycoolORcubicles == TWISTY)
+        benchmark0(benchmark_name, setup, runtime_limit, memory_limit, run_count);
+    else if (twistycoolORcubicles == CUBICLES)
+        benchmark1(benchmark_name, setup, runtime_limit, memory_limit, run_count);
+
+    // create the benchmark object and add all the planners we'd like to run
+    tools::Benchmark::Request request(runtime_limit, memory_limit, run_count);
+    tools::Benchmark b(setup, benchmark_name);
+
+    b.addPlanner(base::PlannerPtr(new geometric::RRT(setup.getSpaceInformation())));
+    b.addPlanner(base::PlannerPtr(new geometric::EST(setup.getSpaceInformation())));
+    b.addPlanner(base::PlannerPtr(new geometric::PRM(setup.getSpaceInformation())));
+    b.addPlanner(base::PlannerPtr(new geometric::RandomTree(setup.getSpaceInformation())));
+
+    setup.getSpaceInformation()->setValidStateSamplerAllocator(&allocUniformStateSampler);
+    b.setExperimentName(benchmark_name + "_uniform_sampler");
+    b.benchmark(request);
+	if (twistycoolORcubicles == TWISTY) {
+		b.saveResultsToFile("twisty.log");
+
+	} else {
+		b.saveResultsToFile("cubicles.log");
+	}
+
+
+
+}
+
+
 int main(int, char **)
 {
 
@@ -228,10 +359,10 @@ int main(int, char **)
     obstacles2.push_back(obstacle);
 
 	//2
-	obstacle.x = .25;
+	obstacle.x = .49;
 	obstacle.y = -1;
 	obstacle.width = .25;
-	obstacle.height = 1.25;
+	obstacle.height = 1.27;
 	obstacles2.push_back(obstacle);
 
 	//3
@@ -269,31 +400,53 @@ int main(int, char **)
 	obstacle.height = .6;
 	obstacles2.push_back(obstacle);
 
+	int benchmarkOrPlan;
+	do 
+	{
+        std::cout << "Benchmark (1) or Plan (2) "<< std::endl;
+		std::cin >> benchmarkOrPlan;
 
-    int choice;
-    do
-    {
-        std::cout << "Plan for: "<< std::endl;
-        std::cout << " (1) A point in 2D" << std::endl;
-        std::cout << " (2) A rigid box in 2D" << std::endl;
+	} while (benchmarkOrPlan < 1 || benchmarkOrPlan > 2);
 
-        std::cin >> choice;
-    } while (choice < 1 || choice > 2);
+	switch (benchmarkOrPlan) 
+	{
+		case BENCHMARK:
+			int benchmarkChoice;
+			do
+			{
+				std::cout << "Benchmark for: "<< std::endl;
+				std::cout << " (1) Twistycool" << std::endl;
+				std::cout << " (2) Cubicles" << std::endl;
 
+				std::cin >> benchmarkChoice;
+			} while (benchmarkChoice < 1 || benchmarkChoice > 2);
+				runBenchmarks(benchmarkChoice);
+				break;
+		case PLANNER:
+			int plannerChoice;
+			do
+			{
+				std::cout << "Plan for: "<< std::endl;
+				std::cout << " (1) A point in 2D" << std::endl;
+				std::cout << " (2) A rigid box in 2D" << std::endl;
 
-    switch(choice)
-    {
-        case R2:
-			std::cout << "Running in first environment (5x5 with 8 obstacles)\n";
-            planWithSimpleSetup(obstacles1, -5, 5, -3.5, -4.5, 4.5, 4.5, choice);
-			std::cout << "Running in second environment (1x1 with 7 obstacles)\n";
-			planWithSimpleSetup(obstacles2, -1, 1, 0, 0, .9, .9, choice);
-            break;
-        case SE2:
-			std::cout << "Running in first environment (5x5 with 8 obstacles)\n";
-            planWithSimpleSetup(obstacles1, -5, 5, -3.5, -4.5, 4.5, 4.5, choice);
-            break;
-    }
+				std::cin >> plannerChoice;
+			} while (plannerChoice < 1 || plannerChoice > 2);
+
+			switch(plannerChoice)
+			{
+				case R2:
+					std::cout << "Running in first environment (5x5 with 8 obstacles)\n";
+				    planWithSimpleSetup(obstacles1, -5, 5, -3.5, -4.5, 4.5, 4.5, plannerChoice);
+					std::cout << "Running in second environment (1x1 with 7 obstacles)\n";
+					planWithSimpleSetup(obstacles2, -1, 1, 0, 0, .9, .9, plannerChoice);
+				    break;
+				case SE2:
+					std::cout << "Running in first environment (5x5 with 8 obstacles)\n";
+				    planWithSimpleSetup(obstacles1, -5, 5, -3.5, -4.5, 4.5, 4.5, plannerChoice);
+				    break;
+			}
+	}
     return 0;
 }
 
