@@ -359,10 +359,7 @@ int main(int, char **)
     obstacles2.push_back(obstacle);
 
 	//2
-<<<<<<< HEAD
 
-=======
->>>>>>> taylor
 	obstacle.x = .49;
 	obstacle.y = -1;
 	obstacle.width = .25;
