@@ -43,6 +43,7 @@ bool isValidStateSquare(const ompl::base::State* state, double sideLength, const
     return isValidSquare(x, y, theta, sideLength, obstacles);
 }
 
+
 // This is our state validity checker.  It says every state is valid.
 bool stateAlwaysValid(const ompl::base::State* /*state*/)
 {
