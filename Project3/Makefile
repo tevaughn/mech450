@@ -1,15 +1,17 @@
 #test
 OMPL_DIR = /usr
-CXXFLAGS = -O2 # change to -g when debugging code
+CXX_FLAGS = -Wall -O2 -std=c++11 # change -02 to -g when debugging code
 INCLUDE_FLAGS = -I${OMPL_DIR}/include
-LD_FLAGS = -L${OMPL_DIR}/lib -lompl -lompl_app_base -lompl_app -lboost_program_options
+LD_FLAGS = -L${OMPL_DIR}/lib -lompl -lompl_app_base -lompl_app -lboost_program_options -lboost_system
 CXX=c++
 
-RandomTree: RandomTree.o main.o
-	$(CXX) $(CXXFLAGS) -o RandomTree RandomTree.o main.o $(LD_FLAGS)
+all: RandomTree
+
+RandomTree: RandomTree.o main.o CollisionChecking.o
+	$(CXX) $(CXXFLAGS) -o RandomTree RandomTree.o main.o CollisionChecking.o $(LD_FLAGS)
 
 clean:
-	rm *.o
+	rm -f *.o RandomTree
 
 %.o: %.cpp
-	$(CXX) -c $(CXXFLAGS) $(INCLUDE_FLAGS) $< -o $@
+	$(CXX) -c $(CXX_FLAGS) $(INCLUDE_FLAGS) $< -o $@

@@ -14,7 +14,6 @@ ompl::geometric::RandomTree::RandomTree(const base::SpaceInformationPtr &si) : b
     goalBias_ = 0.05;
     maxDistance_ = 0.0;
     lastGoalMotion_ = NULL;
-    //spaceInfo_ = NULL;
 
     Planner::declareParam<double>("range", this, &RandomTree::setRange, &RandomTree::getRange, "0.:1.:10000.");
     Planner::declareParam<double>("goal_bias", this, &RandomTree::setGoalBias, &RandomTree::getGoalBias, "0.:.05:1.");
@@ -72,7 +71,7 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
     }
 
     if (nodes_.size() == 0) {
-        OMPL_ERROR("%s: There are no valid initial states!", getName().c_str());
+        OMPL_ERROR("%s: There are no valid initial states RAND!", getName().c_str());
         return base::PlannerStatus::INVALID_START;
     }
 
@@ -87,6 +86,8 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
     Node *approxsol = NULL;
     Node *nodeB = new Node(si_);
     Node *nodeA;
+
+    double approxDistToGoal = std::numeric_limits<double>::infinity();
 
     while (terminationCondition == false)
     {
@@ -103,23 +104,31 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
 
 
         // if no collisions
-        if (true) {
+        if (si_->checkMotion(nodeA->state, nodeB->state)) {
            // Set nodeB parent to nodeA and add to nodes vector
             nodeB->parent = nodeA;
             nodes_.push_back(nodeB);
 
-            bool satisfied = goal->isSatisfied(nodeB->state, 0);
+            // If we made it to the goal, we're done
+            double distToGoal = 0.0;
+            bool satisfied = goal->isSatisfied(nodeB->state, &distToGoal);
             if (satisfied) {
+                approxDistToGoal = distToGoal;
                 solution = nodeB;
                 break;
             }
-
-            approxsol = nodeB;
+            if (distToGoal < approxDistToGoal)
+            {
+                approxDistToGoal = distToGoal;
+                approxsol = nodeB;
+            }
         }
     }
 
     bool solved = false;
     bool approximate = false;
+
+    // If we didn't find a solution, return our closest attempt
     if (solution == NULL)
     {
         solution = approxsol;
@@ -142,7 +151,7 @@ ompl::base::PlannerStatus ompl::geometric::RandomTree::solve(const base::Planner
         PathGeometric *path = new PathGeometric(si_);
         for (int i = nodePath.size() - 1 ; i >= 0 ; --i)
             path->append(nodePath[i]->state);
-        pdef_->addSolutionPath(base::PathPtr(path), approximate, 0, getName());
+        pdef_->addSolutionPath(base::PathPtr(path), approximate, approxDistToGoal, getName());
         solved = true;
     }
 
