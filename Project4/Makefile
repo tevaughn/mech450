@@ -7,8 +7,8 @@ CXX=c++
 
 all: Main
 
-Main: Main.o CollisionChecking.o
-	$(CXX) $(CXXFLAGS) -o Main Main.o CollisionChecking.o $(LD_FLAGS)
+Main: Main.o CollisionChecking.o Car.o Pendulum.o
+	$(CXX) $(CXXFLAGS) -o Main Main.o CollisionChecking.o Car.o Pendulum.o $(LD_FLAGS)
 
 clean:
 	rm -f *.o Main

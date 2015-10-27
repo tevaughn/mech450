@@ -36,230 +36,15 @@ const int CAR = 2;
 const int TWISTY  = 1;
 const int CUBICLES = 2;
 
-// This is our state validity checker for checking if our point robot is in collision
-bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectangle>& obstacles)
-{
-    const ompl::base::RealVectorStateSpace::StateType* r2state;
-    r2state = state->as<ompl::base::RealVectorStateSpace::StateType>();
-    // Extract x, y
-    double x = r2state->values[0];
-    double y = r2state->values[1];
+void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY);
 
-    return isValidPoint(x, y, obstacles);
-}
+void planWithSimpleSetupPendulum(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY);
 
-
-// This is our state validity checker.  It says every state is valid.
-bool stateAlwaysValid(const ompl::base::State* /*state*/)
-{
-    return true;
-}
-
-void CarODE (const ompl::control::ODESolver::StateType& q, const ompl::control::Control* control, ompl::control::ODESolver::StateType& qdot) {
-     	
-	const double *u = control->as<ompl::control::RealVectorControlSpace::ControlType>()->values;
-	const double theta = q[2];
-	double carLength = 0.5;
-
-	// Zero out qdot
-	qdot.resize (q.size (), 0);
-
-	qdot[0] = u[0] * cos(theta);
-	qdot[1] = u[0] * sin(theta);
-	qdot[2] = u[0] * tan(u[1]) / carLength;
-
-}
-
-// This is a callback method invoked after numerical integration.
-void CarPostIntegration (const ompl::base::State* /*state*/, const ompl::control::Control* /*control*/, const double /*duration*/, ompl::base::State *result)
- {
- 	// Normalize orientation between 0 and 2*pi
- 	ompl::base::SO2StateSpace SO2;
-	SO2.enforceBounds (result->as<ompl::base::SE2StateSpace::StateType>()->as<ompl::base::SO2StateSpace::StateType>(1));
-}
-
-void planWithSimpleSetup(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY)
-{
-    // Create the state (configuration) space for your system
-    ompl::base::StateSpacePtr space(new ompl::base::SE2StateSpace());
-
-    // We need to set bounds on R^2
-    ompl::base::RealVectorBounds bounds(2);
-    bounds.setLow(low);
-    bounds.setHigh(high);
-
-    // Cast the r2 pointer to the derived type, then set the bounds
-    space->as<ompl::base::SE2StateSpace>()->setBounds(bounds);
-    
- 	// create a control space
-	ompl::control::ControlSpacePtr cspace(new ompl::control::RealVectorControlSpace(space, 2));
- 
-	// set the bounds for the control space
-	ompl::base::RealVectorBounds cbounds(2);
-	cbounds.setLow(clow);
-	cbounds.setHigh(chigh);
-
-	cspace->as<ompl::control::RealVectorControlSpace>()->setBounds(cbounds);
-
-	// Define a simple setup class
-	ompl::control::SimpleSetup ss(cspace);
-
-    // Setup the StateValidityChecker
-    ss.setStateValidityChecker(boost::bind(isValidStatePoint, _1, obstacles)); 
-
-	// Set propagationg routine
-	ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &CarODE));
-	ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &CarPostIntegration));
-
-    // Specify the start and goal states
-    ompl::base::ScopedState<ompl::base::SE2StateSpace> start(space);
-	start->setX(startX);
-	start->setY(startY);
-	start->setYaw(0.0);    
-
-    ompl::base::ScopedState<ompl::base::SE2StateSpace> goal(space);
-	goal->setX(goalX);
-	goal->setY(goalY);
-	goal->setYaw(0.0);  
-
-    // set the start and goal states
-    ss.setStartAndGoalStates(start, goal);
-	ss.setup();
-
-    // Specify a planning algorithm to use
-    ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
-    ss.setPlanner(planner);
-
-    // Attempt to solve the problem within the given time (seconds)
-    ompl::base::PlannerStatus solved = ss.solve(10.0);
-
-    if (solved)
-    {
-
-        // print the path to screen
-        ompl::geometric::PathGeometric path = ss.getSolutionPath().asGeometric();
-        path.interpolate(50);
-        path.printAsMatrix(std::cout);
-
-
-        // print path to file
-        std::ofstream fout("path.txt");
-
-        path.printAsMatrix(fout);
-        fout.close();
-    } else {
-        std::cout << "No solution found" << std::endl;
-    }
-}
+void runBenchmarks(int twistycoolORcubicles);
 
 base::ValidStateSamplerPtr allocUniformStateSampler(const base::SpaceInformation *si)
 {
     return base::ValidStateSamplerPtr(new base::UniformValidStateSampler(si));
-}
-
-void benchmark0(std::string& benchmark_name, app::SE3RigidBodyPlanning& setup,
-                double& runtime_limit, double& memory_limit, int& run_count)
-{
-    benchmark_name = std::string("cubicles");
-    std::string robot_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/cubicles_robot.dae";
-    std::string env_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/cubicles_env.dae";
-    setup.setRobotMesh(robot_fname.c_str());
-    setup.setEnvironmentMesh(env_fname.c_str());
-
-    base::ScopedState<base::SE3StateSpace> start(setup.getSpaceInformation());
-    start->setX(-4.96);
-    start->setY(-40.62);
-    start->setZ(70.57);
-    start->rotation().setIdentity();
-
-    base::ScopedState<base::SE3StateSpace> goal(start);
-    goal->setX(200.49);
-    goal->setY(-40.62);
-    goal->setZ(70.57);
-    goal->rotation().setIdentity();
-
-    setup.setStartAndGoalStates(start, goal);
-    setup.getSpaceInformation()->setStateValidityCheckingResolution(0.01);
-    setup.getSpaceInformation()->setValidStateSamplerAllocator(&allocUniformStateSampler);
-    setup.setup();
-
-    std::vector<double> cs(3);
-    cs[0] = 35; cs[1] = 35; cs[2] = 35;
-    setup.getStateSpace()->getDefaultProjection()->setCellSizes(cs);
-
-    runtime_limit = 10.0;
-    memory_limit  = 10000.0; // set high because memory usage is not always estimated correctly
-    run_count     = 25;
-
-}
-
-void benchmark1(std::string& benchmark_name, app::SE3RigidBodyPlanning& setup,
-                double& runtime_limit, double& memory_limit, int& run_count)
-{
-    benchmark_name = std::string("Twistycool");
-    std::string robot_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/Twistycool_robot.dae";
-    std::string env_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/Twistycool_env.dae";
-    setup.setRobotMesh(robot_fname.c_str());
-    setup.setEnvironmentMesh(env_fname.c_str());
-
-    base::ScopedState<base::SE3StateSpace> start(setup.getSpaceInformation());
-    start->setX(270.);
-    start->setY(160.);
-    start->setZ(-200.);
-    start->rotation().setIdentity();
-
-    base::ScopedState<base::SE3StateSpace> goal(start);
-    goal->setX(270.);
-    goal->setY(160.);
-    goal->setZ(-400.);
-    goal->rotation().setIdentity();
-
-    base::RealVectorBounds bounds(3);
-    bounds.setHigh(0,350.);
-    bounds.setHigh(1,250.);
-    bounds.setHigh(2,-150.);
-    bounds.setLow(0,200.);
-    bounds.setLow(1,75.);
-    bounds.setLow(2,-450.);
-    setup.getStateSpace()->as<base::SE3StateSpace>()->setBounds(bounds);
-
-    setup.setStartAndGoalStates(start, goal);
-    setup.getSpaceInformation()->setStateValidityCheckingResolution(0.01);
-
-    runtime_limit = 10.0;
-    memory_limit  = 10000.0; // set high because memory usage is not always estimated correctly
-    run_count     = 25;
-}
-
-void runBenchmarks(int twistycoolORcubicles) {
-
-    app::SE3RigidBodyPlanning setup;
-    std::string benchmark_name;
-    double runtime_limit, memory_limit;
-    int run_count;
-
-    if (twistycoolORcubicles == TWISTY)
-        benchmark0(benchmark_name, setup, runtime_limit, memory_limit, run_count);
-    else if (twistycoolORcubicles == CUBICLES)
-        benchmark1(benchmark_name, setup, runtime_limit, memory_limit, run_count);
-
-    // create the benchmark object and add all the planners we'd like to run
-    tools::Benchmark::Request request(runtime_limit, memory_limit, run_count);
-    tools::Benchmark b(setup, benchmark_name);
-
-    //b.addPlanner(base::PlannerPtr(new base::RRT(setup.getSpaceInformation())));
-    //b.addPlanner(base::PlannerPtr(new base::EST(setup.getSpaceInformation())));
-    //b.addPlanner(base::PlannerPtr(new base::PRM(setup.getSpaceInformation())));
-
-    setup.getSpaceInformation()->setValidStateSamplerAllocator(&allocUniformStateSampler);
-    b.setExperimentName(benchmark_name + "_uniform_sampler");
-    b.benchmark(request);
-	if (twistycoolORcubicles == TWISTY) {
-		b.saveResultsToFile("twisty.log");
-
-	} else {
-		b.saveResultsToFile("cubicles.log");
-	}
 }
 
 
@@ -338,11 +123,11 @@ int main(int, char **)
 			{
 				case PENDULUM:
 					std::cout << "Running in empty environment \n";
-				    //planWithSimpleSetup(none, -5, 5, -3.5, -4.5, 4.5, 4.5, plannerChoice);
+				    planWithSimpleSetupPendulum(none, -10, 10, -10, 10, -5, -5, 5, 5);
 				    break;
 				case CAR:
 					std::cout << "Running in street like environment\n";
-				    planWithSimpleSetup(obstacles, -10, 10, -10, 10, -5, -5, 5, 5);
+				    planWithSimpleSetupCar(obstacles, -10, 10, -10, 10, -5, -5, 5, 5);
 				    break;
 			}
 	}
