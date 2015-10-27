@@ -1,4 +1,5 @@
 #include "Main.h"
+#include <ompl/datastructures/NearestNeighborsLinear.h>
 
 
 
@@ -21,22 +22,15 @@ void PendulumODE (const ompl::control::ODESolver::StateType& q, const ompl::cont
 void PendulumPostIntegration (const ompl::base::State* /*state*/, const ompl::control::Control* /*control*/, const double /*duration*/, ompl::base::State *result)
  {
  	// Normalize orientation between 0 and 2*pi
+
  	ompl::base::SO2StateSpace SO2;
-	SO2.enforceBounds (result->as<ompl::base::SE2StateSpace::StateType>()->as<ompl::base::SO2StateSpace::StateType>(1));
+	SO2.enforceBounds(result);
 }
 
-void planWithSimpleSetupPendulum(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY)
+void planWithSimpleSetupPendulum(int clow, int chigh, double startT, double goalT)
 {
     // Create the state (configuration) space for your system
     ompl::base::StateSpacePtr space(new ompl::base::SO2StateSpace());
-
-    // We need to set bounds on R^2
-    //ompl::base::RealVectorBounds bounds(2);
-    //bounds.setLow(low);
-    //bounds.setHigh(high);
-
-    // Cast the r2 pointer to the derived type, then set the bounds
-    //space->as<ompl::base::SE2StateSpace>()->setBounds(bounds);
     
  	// create a control space
 	ompl::control::ControlSpacePtr cspace(new ompl::control::RealVectorControlSpace(space, 1));
@@ -52,25 +46,32 @@ void planWithSimpleSetupPendulum(const std::vector<Rectangle>& obstacles,  int l
 	ompl::control::SimpleSetup ss(cspace);
 
     // Setup the StateValidityChecker
-    ss.setStateValidityChecker(boost::bind(isValidStatePoint, _1, obstacles)); 
+    ss.setStateValidityChecker(boost::bind(stateAlwaysValid, _1)); 
 
 	// Set propagationg routine
 	ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &PendulumODE));
+
 	ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &PendulumPostIntegration));
 
     // Specify the start and goal states
     ompl::base::ScopedState<ompl::base::SO2StateSpace> start(space);
-	start->value = -3.14/2; 
+	start->value = startT; 
 
     ompl::base::ScopedState<ompl::base::SO2StateSpace> goal(space);
-	goal->value = 3.14/2;
+	goal->value = goalT;
 
     // set the start and goal states
     ss.setStartAndGoalStates(start, goal);
+ 	
 	ss.setup();
 
     // Specify a planning algorithm to use
+	//ss.getSpaceInformation()->distance;
+	
     ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
+	
+	//planner->as<ompl::control::RRT>()->setNearestNeighbors<ompl::NearestNeighborsLinear>();
+
     ss.setPlanner(planner);
 
     // Attempt to solve the problem within the given time (seconds)
@@ -78,7 +79,7 @@ void planWithSimpleSetupPendulum(const std::vector<Rectangle>& obstacles,  int l
 
     if (solved)
     {
-
+		std::cout << "HERE";
         // print the path to screen
         ompl::geometric::PathGeometric path = ss.getSolutionPath().asGeometric();
         path.interpolate(50);
