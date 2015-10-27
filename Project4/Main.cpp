@@ -19,6 +19,8 @@ base::ValidStateSamplerPtr allocUniformStateSampler(const base::SpaceInformation
     return base::ValidStateSamplerPtr(new base::UniformValidStateSampler(si));
 }
 
+
+
 // This is our state validity checker for checking if our point robot is in collision
 bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectangle>& obstacles)
 {
@@ -31,13 +33,10 @@ bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectang
     return isValidPoint(x, y, obstacles);
 }
 
-
-
-
 // This is our state validity checker.  It says every state is valid.
 bool stateAlwaysValid(const ompl::base::State* /*state*/)
 {
-	std::cout << "HERE!\n" ;   
+	//std::cout << "HERE!\n" ;   
 	return true;
 }
 
@@ -117,7 +116,7 @@ int main(int, char **)
 			{
 				case PENDULUM:
 					std::cout << "Running in empty environment \n";
-				    planWithSimpleSetupPendulum(-10, 10, -3.14/2, 3.14/2);
+				    planWithSimpleSetupPendulum(-1, 1, -3.14/2, 3.14/2);
 				    break;
 				case CAR:
 					std::cout << "Running in street like environment\n";
