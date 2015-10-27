@@ -23,17 +23,17 @@ void CarPostIntegration (const ompl::base::State* /*state*/, const ompl::control
 	SO2.enforceBounds (result->as<ompl::base::SE2StateSpace::StateType>()->as<ompl::base::SO2StateSpace::StateType>(1));
 }
 
-bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state)
+bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state, const std::vector<Rectangle>& obstacles)
 {
      //    ob::ScopedState<ob::SE2StateSpace>
      const ompl::base::SE2StateSpace::StateType *se2state = state->as<ompl::base::SE2StateSpace::StateType>();
 
      const ompl::base::RealVectorStateSpace::StateType *pos = se2state->as<ompl::base::RealVectorStateSpace::StateType>(0);
 
-     const ompl::base::SO2StateSpace::StateType *rot = se2state->as<ompl::base::SO2StateSpace::StateType>(1);
+     //const ompl::base::SO2StateSpace::StateType *rot = se2state->as<ompl::base::SO2StateSpace::StateType>(1);
  
     // return a value that is always true but uses the two variables we define, so we avoid compiler warnings
-	return si->satisfiesBounds(state) && (const void*)rot != (const void*)pos;
+	return si->satisfiesBounds(state) && isValidStatePoint(pos, obstacles);
 }
 
 void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY)
@@ -64,7 +64,7 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 
     // Setup the StateValidityChecker
     //ss.setStateValidityChecker(boost::bind(isValidStatePoint, _1, obstacles)); 
-	ss.setStateValidityChecker(boost::bind(&isStateValid, ss.getSpaceInformation().get(), _1));
+	ss.setStateValidityChecker(boost::bind(&isStateValid, ss.getSpaceInformation().get(), _1, obstacles));
 
 	// Set propagationg routine
 	ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &CarODE));
