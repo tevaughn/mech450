@@ -1,24 +1,26 @@
-#include <iostream>
-#include <fstream>
 #include <cmath>
-
 #include <boost/bind.hpp>
 
 // Including SimpleSetup.h will pull in MOST of what you need to plan
-#include <ompl/geometric/SimpleSetup.h>
 #include <ompl/base/samplers/UniformValidStateSampler.h>
 
 // Except for the state space definitions and any planners
-#include <ompl/base/spaces/RealVectorStateSpace.h>
-#include <ompl/base/spaces/SO2StateSpace.h>
 
-#include <omplapp/config.h>
 #include <omplapp/apps/SE3RigidBodyPlanning.h>
 #include <ompl/tools/benchmark/Benchmark.h>
 
-#include <ompl/geometric/planners/rrt/RRT.h>
-#include <ompl/geometric/planners/est/EST.h>
-#include <ompl/geometric/planners/prm/PRM.h>
+#include <ompl/control/planners/rrt/RRT.h>
+
+#include <ompl/control/SpaceInformation.h>
+#include <ompl/base/spaces/SE2StateSpace.h>
+#include <ompl/control/ODESolver.h>
+#include <ompl/control/spaces/RealVectorControlSpace.h>
+#include <ompl/control/SimpleSetup.h>
+#include <ompl/config.h>
+#include <iostream>
+#include <fstream>
+#include <valarray>
+#include <limits>
 
 // The collision checker produced in project 2
 #include "CollisionChecking.h"
@@ -28,8 +30,11 @@ using namespace ompl;
 const int BENCHMARK  = 1;
 const int PLANNER = 2;
 
-const int PENDELUM  = 1;
+const int PENDULUM  = 1;
 const int CAR = 2;
+
+const int TWISTY  = 1;
+const int CUBICLES = 2;
 
 // This is our state validity checker for checking if our point robot is in collision
 bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectangle>& obstacles)
@@ -50,23 +55,9 @@ bool stateAlwaysValid(const ompl::base::State* /*state*/)
     return true;
 }
 
-
-void pendulumODE(const ompl::control::ODESolver::StateType& q, const ompl::control::Control* control, ompl::control::ODESolver::StateType& qdot) {
-
-	const double *u = control->as<ompl::control::RealVectorControlSpace::ControlType>()->values;
-	const double thera = q[2];
-	
-	qdot.resize(q.size(),0);
-	
-	qdot[0] = q[1]
-	qdpt[1] = cos(q[0])*-9.81+tau;
-
-
-}
-
-void CarODE (const oc::ODESolver::StateType& q, const oc::Control* control, oc::ODESolver::StateType& qdot) {
+void CarODE (const ompl::control::ODESolver::StateType& q, const ompl::control::Control* control, ompl::control::ODESolver::StateType& qdot) {
      	
-	const double *u = control->as<oc::RealVectorControlSpace::ControlType>()->values;
+	const double *u = control->as<ompl::control::RealVectorControlSpace::ControlType>()->values;
 	const double theta = q[2];
 	double carLength = 0.5;
 
@@ -79,7 +70,15 @@ void CarODE (const oc::ODESolver::StateType& q, const oc::Control* control, oc::
 
 }
 
-void planWithSimpleSetup(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY, int SE2orR2)
+// This is a callback method invoked after numerical integration.
+void CarPostIntegration (const ompl::base::State* /*state*/, const ompl::control::Control* /*control*/, const double /*duration*/, ompl::base::State *result)
+ {
+ 	// Normalize orientation between 0 and 2*pi
+ 	ompl::base::SO2StateSpace SO2;
+	SO2.enforceBounds (result->as<ompl::base::SE2StateSpace::StateType>()->as<ompl::base::SO2StateSpace::StateType>(1));
+}
+
+void planWithSimpleSetup(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY)
 {
     // Create the state (configuration) space for your system
     ompl::base::StateSpacePtr space(new ompl::base::SE2StateSpace());
@@ -93,14 +92,14 @@ void planWithSimpleSetup(const std::vector<Rectangle>& obstacles,  int low, int 
     space->as<ompl::base::SE2StateSpace>()->setBounds(bounds);
     
  	// create a control space
-	ompl::control::ControlSpacePtr cspace(new RealVectorControlSpace(space, 2));
+	ompl::control::ControlSpacePtr cspace(new ompl::control::RealVectorControlSpace(space, 2));
  
 	// set the bounds for the control space
 	ompl::base::RealVectorBounds cbounds(2);
 	cbounds.setLow(clow);
 	cbounds.setHigh(chigh);
 
-	cspace->as<DemoControlSpace>()->setBounds(cbounds);
+	cspace->as<ompl::control::RealVectorControlSpace>()->setBounds(cbounds);
 
 	// Define a simple setup class
 	ompl::control::SimpleSetup ss(cspace);
@@ -109,26 +108,26 @@ void planWithSimpleSetup(const std::vector<Rectangle>& obstacles,  int low, int 
     ss.setStateValidityChecker(boost::bind(isValidStatePoint, _1, obstacles)); 
 
 	// Set propagationg routine
-	ompl::control::ODESolverPtr odeSolver(new oc::ODEBasicSolver<> (ss.getSpaceInformation(), &KinematicCarODE));
-	ss.setStatePropagator(oc::ODESolver::getStatePropagator(odeSolver, &KinematicCarPostIntegration))
+	ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &CarODE));
+	ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &CarPostIntegration));
 
     // Specify the start and goal states
     ompl::base::ScopedState<ompl::base::SE2StateSpace> start(space);
 	start->setX(startX);
 	start->setY(startY);
-	start->setYaw(0.0)    
+	start->setYaw(0.0);    
 
     ompl::base::ScopedState<ompl::base::SE2StateSpace> goal(space);
 	goal->setX(goalX);
 	goal->setY(goalY);
-	goal->setYaw(0.0)   
+	goal->setYaw(0.0);  
 
     // set the start and goal states
     ss.setStartAndGoalStates(start, goal);
-	ss.setup()
+	ss.setup();
 
     // Specify a planning algorithm to use
-    ompl::control::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
+    ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
     ss.setPlanner(planner);
 
     // Attempt to solve the problem within the given time (seconds)
@@ -136,11 +135,9 @@ void planWithSimpleSetup(const std::vector<Rectangle>& obstacles,  int low, int 
 
     if (solved)
     {
-        // Apply some heuristics to simplify (and prettify) the solution
-        ss.simplifySolution();
 
         // print the path to screen
-        ompl::geometric::PathGeometric& path = ss.getSolutionPath().asGeometric();
+        ompl::geometric::PathGeometric path = ss.getSolutionPath().asGeometric();
         path.interpolate(50);
         path.printAsMatrix(std::cout);
 
@@ -250,10 +247,9 @@ void runBenchmarks(int twistycoolORcubicles) {
     tools::Benchmark::Request request(runtime_limit, memory_limit, run_count);
     tools::Benchmark b(setup, benchmark_name);
 
-    b.addPlanner(base::PlannerPtr(new geometric::RRT(setup.getSpaceInformation())));
-    b.addPlanner(base::PlannerPtr(new geometric::EST(setup.getSpaceInformation())));
-    b.addPlanner(base::PlannerPtr(new geometric::PRM(setup.getSpaceInformation())));
-    b.addPlanner(base::PlannerPtr(new geometric::RandomTree(setup.getSpaceInformation())));
+    //b.addPlanner(base::PlannerPtr(new base::RRT(setup.getSpaceInformation())));
+    //b.addPlanner(base::PlannerPtr(new base::EST(setup.getSpaceInformation())));
+    //b.addPlanner(base::PlannerPtr(new base::PRM(setup.getSpaceInformation())));
 
     setup.getSpaceInformation()->setValidStateSamplerAllocator(&allocUniformStateSampler);
     b.setExperimentName(benchmark_name + "_uniform_sampler");
@@ -264,9 +260,6 @@ void runBenchmarks(int twistycoolORcubicles) {
 	} else {
 		b.saveResultsToFile("cubicles.log");
 	}
-
-
-
 }
 
 
@@ -328,7 +321,7 @@ int main(int, char **)
 
 				std::cin >> benchmarkChoice;
 			} while (benchmarkChoice < 1 || benchmarkChoice > 2);
-				runBenchmarks(benchmarkChoice);
+				//runBenchmarks(benchmarkChoice);
 				break;
 		case PLANNER:
 			int plannerChoice;
@@ -345,11 +338,11 @@ int main(int, char **)
 			{
 				case PENDULUM:
 					std::cout << "Running in empty environment \n";
-				    planWithSimpleSetup(none, -5, 5, -3.5, -4.5, 4.5, 4.5, plannerChoice);
+				    //planWithSimpleSetup(none, -5, 5, -3.5, -4.5, 4.5, 4.5, plannerChoice);
 				    break;
 				case CAR:
 					std::cout << "Running in street like environment\n";
-				    planWithSimpleSetup(obstacles, -5, 5, -3.5, -4.5, 4.5, 4.5, plannerChoice);
+				    planWithSimpleSetup(obstacles, -10, 10, -10, 10, -5, -5, 5, 5);
 				    break;
 			}
 	}
