@@ -1,14 +1,17 @@
+#test
 OMPL_DIR = /usr
-CXXFLAGS = -O2 # change to -g when debugging code
+CXX_FLAGS = -Wall -O2 -std=c++11 # change -02 to -g when debugging code
 INCLUDE_FLAGS = -I${OMPL_DIR}/include
-LD_FLAGS = -L${OMPL_DIR}/lib -lompl -lompl_app_base -lompl_app -lboost_program_options
+LD_FLAGS = -L${OMPL_DIR}/lib -lompl -lompl_app_base -lompl_app -lboost_program_options -lboost_system
 CXX=c++
 
-myprogram: myprogram.o myclass.o
-	$(CXX) $(CXXFLAGS) -o myprogram myprogram.o myclass.o $(LD_FLAGS)
+all: Main
+
+Main: Main.o CollisionChecking.o
+	$(CXX) $(CXXFLAGS) -o Main Main.o CollisionChecking.o $(LD_FLAGS)
 
 clean:
-	rm *.o
+	rm -f *.o Main
 
 %.o: %.cpp
-	$(CXX) -c $(CXXFLAGS) $(INCLUDE_FLAGS) $< -o $@
+	$(CXX) -c $(CXX_FLAGS) $(INCLUDE_FLAGS) $< -o $@
