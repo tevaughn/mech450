@@ -8,6 +8,7 @@
 #include <omplapp/apps/SE3RigidBodyPlanning.h>
 
 #include <ompl/control/planners/rrt/RRT.h>
+#include <ompl/control/planners/kpiece/KPIECE1.h>
 
 #include <ompl/control/SpaceInformation.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
@@ -29,6 +30,11 @@ const int PLANNER = 2;
 
 const int PENDULUM  = 1;
 const int CAR = 2;
+
+const int RRT = 1;
+const int KPIECE = 2;
+const int RGRRT = 3;
+
 
 
 void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY, int plannerChoice);
