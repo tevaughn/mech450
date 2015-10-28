@@ -15,6 +15,31 @@ void CarODE (const ompl::control::ODESolver::StateType& q, const ompl::control::
 
 }
 
+// custom projection for KPIECE1
+class CarProjection : public ompl::base::ProjectionEvaluator
+{
+public:
+	CarProjection(const ompl::base::StateSpacePtr &space) : ompl::base::ProjectionEvaluator(space)
+	{
+	}
+	virtual unsigned int getDimension(void) const
+	{
+		return 2;
+	}
+	virtual void defaultCellSizes(void)
+	{
+		cellSizes_.resize(2);
+		cellSizes_[0] = 0.1;
+		cellSizes_[1] = 0.25;
+	}
+	virtual void project(const ompl::base::State *state, ompl::base::EuclideanProjection &projection) const
+	{
+		const double *values = state->as<ompl::base::RealVectorStateSpace::StateType>()->values;
+		projection(0) = (values[0] + values[1]) / 2.0;
+		projection(1) = (values[2] + values[3]) / 2.0;
+	}
+};
+
 // This is a callback method invoked after numerical integration.
 void CarPostIntegration (const ompl::base::State* /*state*/, const ompl::control::Control* /*control*/, const double /*duration*/, ompl::base::State *result)
  {
@@ -85,9 +110,16 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
     ss.setStartAndGoalStates(start, goal);
 	ss.setup();
 
-    // Specify a planning algorithm to use
-    ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
-    ss.setPlanner(planner);
+    // set rrt as planning algorithm
+    //ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
+
+	// register the kpiece projection
+	//space->registerDefaultProjection(ompl::base::ProjectionEvaluatorPtr(new CarProjection(space)));
+
+	//set kpiece as planning algorithm
+	ompl::base::PlannerPtr planner(new ompl::control::KPIECE1(ss.getSpaceInformation()));
+
+	ss.setPlanner(planner);
 
     // Attempt to solve the problem within the given time (seconds)
     ompl::base::PlannerStatus solved = ss.solve(10.0);

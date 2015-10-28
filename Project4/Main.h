@@ -8,6 +8,7 @@
 #include <omplapp/apps/SE3RigidBodyPlanning.h>
 
 #include <ompl/control/planners/rrt/RRT.h>
+#include <ompl/control/planners/kpiece/KPIECE1.h>
 
 #include <ompl/control/SpaceInformation.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
