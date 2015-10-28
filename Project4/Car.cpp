@@ -36,7 +36,7 @@ bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::S
 	return si->satisfiesBounds(state) && isValidStatePoint(pos, obstacles);
 }
 
-void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY)
+void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY, int plannerChoice)
 {
     // Create the state (configuration) space for your system
     ompl::base::StateSpacePtr space(new ompl::base::SE2StateSpace());
@@ -74,12 +74,12 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
     ompl::base::ScopedState<ompl::base::SE2StateSpace> start(space);
 	start->setX(startX);
 	start->setY(startY);
-	start->setYaw(0.0);    
+	start->setYaw(0.0);
 
     ompl::base::ScopedState<ompl::base::SE2StateSpace> goal(space);
 	goal->setX(goalX);
 	goal->setY(goalY);
-	goal->setYaw(0.0);  
+	goal->setYaw(0.0);
 
     // set the start and goal states
     ss.setStartAndGoalStates(start, goal);

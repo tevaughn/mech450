@@ -23,12 +23,21 @@
 // The collision checker produced in project 2
 #include "CollisionChecking.h"
 
+const int BENCHMARK  = 1;
+const int PLANNER = 2;
+
+const int PENDULUM  = 1;
+const int CAR = 2;
+
+const int TWISTY  = 1;
+const int CUBICLES = 2;
+
 bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectangle>& obstacles);
 
 bool stateAlwaysValid(const ompl::base::State* /*state*/);
 
-void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY);
+void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY, int plannerChoice);
 
-void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double startT, double goalT);
+void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double startT, double goalT, int plannerChoice);
 
 ompl::base::ValidStateSamplerPtr allocUniformStateSampler(const ompl::base::SpaceInformation *si);
