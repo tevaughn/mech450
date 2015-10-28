@@ -32,6 +32,10 @@ const int CAR = 2;
 const int TWISTY  = 1;
 const int CUBICLES = 2;
 
+const int RRT = 1;
+const int KPIECE = 2;
+const int RGRRT = 3;
+
 bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectangle>& obstacles);
 
 bool stateAlwaysValid(const ompl::base::State* /*state*/);
