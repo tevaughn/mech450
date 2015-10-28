@@ -15,6 +15,7 @@ void CarODE (const ompl::control::ODESolver::StateType& q, const ompl::control::
 
 }
 
+
 // custom projection for KPIECE1
 class CarProjection : public ompl::base::ProjectionEvaluator
 {
@@ -117,6 +118,7 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 		ss.setPlanner(planner);
 	} else if (plannerChoice == KPIECE) {
 		ompl::base::PlannerPtr planner(new ompl::control::KPIECE1(ss.getSpaceInformation()));
+		//space->registerDefaultProjection(ompl::base::ProjectionEvaluatorPtr(new CarProjection(space)));
 		ss.setPlanner(planner);
 	}
 	else if (plannerChoice == RGRRT) {

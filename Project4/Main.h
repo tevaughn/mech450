@@ -8,6 +8,7 @@
 #include <omplapp/apps/SE3RigidBodyPlanning.h>
 
 #include <ompl/control/planners/rrt/RRT.h>
+#include <ompl/control/planners/kpiece/KPIECE1.h>
 
 #include <ompl/control/SpaceInformation.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
@@ -45,3 +46,28 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double startT, double goalT, int plannerChoice);
 
 ompl::base::ValidStateSamplerPtr allocUniformStateSampler(const ompl::base::SpaceInformation *si);
+
+// custom pendulum projection for KPIECE1
+class myProjection : public ompl::base::ProjectionEvaluator
+{
+public:
+    myProjection(const ompl::base::StateSpacePtr &space) : ompl::base::ProjectionEvaluator(space)
+    {
+    }
+    virtual unsigned int getDimension(void) const
+    {
+        return 2;
+    }
+    virtual void defaultCellSizes(void)
+    {
+        cellSizes_.resize(2);
+        cellSizes_[0] = 0.1;
+        cellSizes_[1] = 0.25;
+    }
+    virtual void project(const ompl::base::State *state, ompl::base::EuclideanProjection &projection) const
+    {
+        const double *values = state->as<ompl::base::RealVectorStateSpace::StateType>()->values;
+        projection(0) = (values[0] + values[1]) / 2.0;
+        projection(1) = (values[2] + values[3]) / 2.0;
+    }
+};
