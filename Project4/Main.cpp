@@ -2,18 +2,6 @@
 
 using namespace ompl;
 
-const int BENCHMARK  = 1;
-const int PLANNER = 2;
-
-const int PENDULUM  = 1;
-const int CAR = 2;
-
-const int TWISTY  = 1;
-const int CUBICLES = 2;
-
-
-void runBenchmarks(int twistycoolORcubicles);
-
 base::ValidStateSamplerPtr allocUniformStateSampler(const base::SpaceInformation *si)
 {
     return base::ValidStateSamplerPtr(new base::UniformValidStateSampler(si));
@@ -100,31 +88,50 @@ int main(int, char **)
 				std::cin >> benchmarkChoice;
 			} while (benchmarkChoice < 1 || benchmarkChoice > 2);
 
-			std::cout << "starting: "<< std::endl;
-			runBenchmarks(benchmarkChoice);
-			
+			switch(benchmarkChoice)
+			{
+				case PENDULUM:
+					runPendulumBenchmark(-10, 10, -10, 10, -3.14/2, 3.14/2);
+					break;
+				case CAR:
+					runCarBenchmark(obstacles, -10, 10, -10, 10, -5, -5, 5, 5);
+					break;
+			}
+	    
 			break;
 
 		case PLANNER:
-			int plannerChoice;
+			int envChoice;
 			do
 			{
 				std::cout << "Plan for: "<< std::endl;
 				std::cout << " (1) Pendulum" << std::endl;
 				std::cout << " (2) Car" << std::endl;
 
-				std::cin >> plannerChoice;
-			} while (plannerChoice < 1 || plannerChoice > 2);
+				std::cin >> envChoice;
+			} while (envChoice < 1 || envChoice > 2);
 
-			switch(plannerChoice)
+            int plannerChoice;
+            do
+            {
+                std::cout << "Plan using: "<< std::endl;
+                std::cout << " (1) RRT" << std::endl;
+                std::cout << " (2) KPIECE" << std::endl;
+                std::cout << " (3) RGRRT" << std::endl;
+
+                std::cin >> plannerChoice;
+            } while (plannerChoice < 1 || plannerChoice > 2);
+
+			switch(envChoice)
 			{
 				case PENDULUM:
 					std::cout << "Running in empty environment \n";
-				    planWithSimpleSetupPendulum(-1, 1, -9.81, 9.81, -3.14/2, 3.14/2);
+                    //changed bounds to 10 because 9.81 is not an int
+				    planWithSimpleSetupPendulum(-10, 10, -10, 10, -3.14/2, 3.14/2, plannerChoice);
 				    break;
 				case CAR:
 					std::cout << "Running in street like environment\n";
-				    planWithSimpleSetupCar(obstacles, -10, 10, -10, 10, -5, -5, 5, 5);
+				    planWithSimpleSetupCar(obstacles, -10, 10, -10, 10, -5, -5, 5, 5, plannerChoice);
 				    break;
 			}
 	}

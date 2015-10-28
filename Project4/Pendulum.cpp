@@ -29,11 +29,10 @@ void PendulumPostIntegration (const ompl::base::State* /*state*/, const ompl::co
 
 bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state)
 {
-	
 	return si->satisfiesBounds(state);
 }
 
-void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double startT, double goalT)
+void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double startT, double goalT, int plannerChoice)
 {
     // Create the state (configuration) space for your system
     ompl::base::StateSpacePtr space(new ompl::base::RealVectorStateSpace(1));
