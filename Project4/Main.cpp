@@ -50,28 +50,28 @@ int main(int, char **)
     std::vector<Rectangle> obstacles;
     Rectangle obstacle;
 
-	//1
+	//1 bottom
     obstacle.x = -6.0;
     obstacle.y = -10.0;
     obstacle.width = 12.0;
     obstacle.height = 4.0;
     obstacles.push_back(obstacle);
 
-	//2
+	//2 left side
 	obstacle.x = -6;
 	obstacle.y = -4;
 	obstacle.width = 6;
 	obstacle.height = 8;
 	obstacles.push_back(obstacle);
 
-	//3
+	//3 right side
 	obstacle.x = 2;
 	obstacle.y = -4;
 	obstacle.width = 4;
 	obstacle.height = 8;
 	obstacles.push_back(obstacle);
 
-	//4
+	//4 top
 	obstacle.x = -6;
 	obstacle.y = 6;
 	obstacle.width = 12;
