@@ -51,14 +51,14 @@ int main(int, char **)
     Rectangle obstacle;
 
 	//1
-    obstacle.x = -6.0;
+    obstacle.x = -10.0;
     obstacle.y = -10.0;
     obstacle.width = 20.0;
     obstacle.height = 4.0;
     obstacles.push_back(obstacle);
 
 	//2
-	obstacle.x = -6;
+	obstacle.x = -10;
 	obstacle.y = -4;
 	obstacle.width = 10;
 	obstacle.height = 8;
@@ -99,7 +99,7 @@ int main(int, char **)
 
 				std::cin >> benchmarkChoice;
 			} while (benchmarkChoice < 1 || benchmarkChoice > 2);
-				//runBenchmarks(benchmarkChoice);
+				runBenchmarks(benchmarkChoice);
 				break;
 		case PLANNER:
 			int plannerChoice;
@@ -116,7 +116,7 @@ int main(int, char **)
 			{
 				case PENDULUM:
 					std::cout << "Running in empty environment \n";
-				    planWithSimpleSetupPendulum(-9.81, 9.81, -3.14/2, 3.14/2);
+				    planWithSimpleSetupPendulum(-1, 1, -9.81, 9.81, -3.14/2, 3.14/2);
 				    break;
 				case CAR:
 					std::cout << "Running in street like environment\n";

@@ -29,4 +29,6 @@ bool stateAlwaysValid(const ompl::base::State* /*state*/);
 
 void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, int high, int clow, int chigh, double startX, double startY, double goalX, double goalY);
 
-void planWithSimpleSetupPendulum(int clow, int chigh, double startT, double goalT);
+void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double startT, double goalT);
+
+ompl::base::ValidStateSamplerPtr allocUniformStateSampler(const ompl::base::SpaceInformation *si);

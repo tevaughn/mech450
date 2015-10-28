@@ -33,7 +33,7 @@ bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::S
 	return si->satisfiesBounds(state);
 }
 
-void planWithSimpleSetupPendulum(int clow, int chigh, double startT, double goalT)
+void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double startT, double goalT)
 {
     // Create the state (configuration) space for your system
     ompl::base::StateSpacePtr space(new ompl::base::RealVectorStateSpace(1));
@@ -51,8 +51,8 @@ void planWithSimpleSetupPendulum(int clow, int chigh, double startT, double goal
 
 	// set the bounds for the control space
 	ompl::base::RealVectorBounds cbounds(1);
-	cbounds.setLow(clow);
-	cbounds.setHigh(chigh);
+	cbounds.setLow(low);
+	cbounds.setHigh(high);
 
 	cspace->as<ompl::control::RealVectorControlSpace>()->setBounds(cbounds);
 
@@ -98,7 +98,6 @@ void planWithSimpleSetupPendulum(int clow, int chigh, double startT, double goal
     {
         // print the path to screen
         ompl::geometric::PathGeometric path = ss.getSolutionPath().asGeometric();
-        path.simplify();
         path.interpolate(50);
         path.printAsMatrix(std::cout);
 
