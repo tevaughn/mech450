@@ -23,6 +23,8 @@
 // The collision checker produced in project 2
 #include "CollisionChecking.h"
 
+void runBenchmarks(int twistycoolORcubicles);
+
 bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectangle>& obstacles);
 
 bool stateAlwaysValid(const ompl::base::State* /*state*/);

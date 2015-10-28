@@ -96,11 +96,15 @@ int main(int, char **)
 				std::cout << "Benchmark for: "<< std::endl;
 				std::cout << " (1) Pendulum" << std::endl;
 				std::cout << " (2) Car" << std::endl;
-
+				
 				std::cin >> benchmarkChoice;
 			} while (benchmarkChoice < 1 || benchmarkChoice > 2);
-				runBenchmarks(benchmarkChoice);
-				break;
+
+			std::cout << "starting: "<< std::endl;
+			runBenchmarks(benchmarkChoice);
+			
+			break;
+
 		case PLANNER:
 			int plannerChoice;
 			do

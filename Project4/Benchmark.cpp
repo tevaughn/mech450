@@ -1,39 +1,24 @@
-#include <cmath>
-#include <boost/bind.hpp>
-
-// Including SimpleSetup.h will pull in MOST of what you need to plan
-#include <ompl/base/samplers/UniformValidStateSampler.h>
-
-// Except for the state space definitions and any planners
-
-#include <omplapp/apps/SE3RigidBodyPlanning.h>
+#include <omplapp/apps/BlimpPlanning.h>
 #include <ompl/tools/benchmark/Benchmark.h>
 
 #include <ompl/control/planners/rrt/RRT.h>
+#include <ompl/control/planners/kpiece/KPIECE1.h>
 
-#include <ompl/control/SpaceInformation.h>
-#include <ompl/base/spaces/SE2StateSpace.h>
-#include <ompl/control/ODESolver.h>
-#include <ompl/control/spaces/RealVectorControlSpace.h>
-#include <ompl/control/SimpleSetup.h>
-#include <ompl/config.h>
-#include <iostream>
-#include <fstream>
-#include <valarray>
-#include <limits>
 
 // The collision checker produced in project 2
 #include "CollisionChecking.h"
+#include "Main.h"
 
+using namespace ompl;
 
 const int TWISTY  = 1;
 const int CUBICLES = 2;
 
-void benchmark0(std::string& benchmark_name, app::SE3RigidBodyPlanning& setup,
+void benchmark0(std::string& benchmark_name, app::BlimpPlanning& setup,
                 double& runtime_limit, double& memory_limit, int& run_count)
 {
-    benchmark_name = std::string("cubicles");
-    std::string robot_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/cubicles_robot.dae";
+    benchmark_name = std::string("blimp");
+    std::string robot_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/blimp.dae";
     std::string env_fname = std::string(OMPLAPP_RESOURCE_DIR) + "/3D/cubicles_env.dae";
     setup.setRobotMesh(robot_fname.c_str());
     setup.setEnvironmentMesh(env_fname.c_str());
@@ -65,7 +50,7 @@ void benchmark0(std::string& benchmark_name, app::SE3RigidBodyPlanning& setup,
 
 }
 
-void benchmark1(std::string& benchmark_name, app::SE3RigidBodyPlanning& setup,
+void benchmark1(std::string& benchmark_name, app::BlimpPlanning& setup,
                 double& runtime_limit, double& memory_limit, int& run_count)
 {
     benchmark_name = std::string("Twistycool");
@@ -104,24 +89,24 @@ void benchmark1(std::string& benchmark_name, app::SE3RigidBodyPlanning& setup,
 }
 
 void runBenchmarks(int twistycoolORcubicles) {
-
-    app::SE3RigidBodyPlanning setup;
+	std::cout << "lets try to do things";
+    app::BlimpPlanning setup;
     std::string benchmark_name;
     double runtime_limit, memory_limit;
     int run_count;
-
+	std::cout << "lets try to call bnech";
     if (twistycoolORcubicles == TWISTY)
         benchmark0(benchmark_name, setup, runtime_limit, memory_limit, run_count);
     else if (twistycoolORcubicles == CUBICLES)
         benchmark1(benchmark_name, setup, runtime_limit, memory_limit, run_count);
-
+	std::cout << "called bench";
     // create the benchmark object and add all the planners we'd like to run
     tools::Benchmark::Request request(runtime_limit, memory_limit, run_count);
     tools::Benchmark b(setup, benchmark_name);
 
-    //b.addPlanner(base::PlannerPtr(new base::RRT(setup.getSpaceInformation())));
-    //b.addPlanner(base::PlannerPtr(new base::EST(setup.getSpaceInformation())));
-    //b.addPlanner(base::PlannerPtr(new base::PRM(setup.getSpaceInformation())));
+    b.addPlanner(base::PlannerPtr(new control::RRT(setup.getSpaceInformation())));
+    b.addPlanner(base::PlannerPtr(new control::KPIECE1(setup.getSpaceInformation())));
+    //b.addPlanner(base::PlannerPtr(new base::RG-RRT(setup.getSpaceInformation())));
 
     setup.getSpaceInformation()->setValidStateSamplerAllocator(&allocUniformStateSampler);
     b.setExperimentName(benchmark_name + "_uniform_sampler");
