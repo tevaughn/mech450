@@ -1,6 +1,7 @@
 #include "Main.h"
 #include <ompl/datastructures/NearestNeighborsLinear.h>
-
+#include <ompl/base/goals/GoalStates.h>
+#include <ompl/base/Goal.h>
 
 
 
@@ -67,24 +68,24 @@ void planWithSimpleSetupPendulum(int clow, int chigh, double startT, double goal
 	ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &PendulumPostIntegration));
     std::cout << "propped\n";
     // Specify the start and goal states
-    //ompl::base::ScopedState<ompl::base::SO2StateSpace> start(space);
-	//start->value = startT; 
-	ompl::base::ScopedState<> start(space);
+
+    ompl::base::ScopedState<ompl::base::CompoundStateSpace> start(space);
+    start->as<ompl::base::SO2StateSpace::StateType>(0)->setIdentity();
+
     start[0] = startT;
     start[1] = 0.0;
 
 
-    //ompl::base::ScopedState<ompl::base::SO2StateSpace> goal(space);
-	//goal->value = goalT;
-	ompl::base::ScopedState<> goal(space);
+    ompl::base::ScopedState<ompl::base::CompoundStateSpace> goal(space);
+    goal->as<ompl::base::SO2StateSpace::StateType>(0)->setIdentity();
+
     goal[0] = goalT;
     goal[1] = 0.0;
 
     // set the start and goal states
     ss.setStartAndGoalStates(start, goal);
- 	    std::cout << "set goal\n";
 	ss.setup();
-    std::cout << "setup\n";
+
     // Specify a planning algorithm to use
     ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
 
@@ -97,6 +98,7 @@ void planWithSimpleSetupPendulum(int clow, int chigh, double startT, double goal
     {
         // print the path to screen
         ompl::geometric::PathGeometric path = ss.getSolutionPath().asGeometric();
+        path.simplify();
         path.interpolate(50);
         path.printAsMatrix(std::cout);
 

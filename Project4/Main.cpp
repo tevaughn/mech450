@@ -53,28 +53,28 @@ int main(int, char **)
 	//1
     obstacle.x = -6.0;
     obstacle.y = -10.0;
-    obstacle.width = 12.0;
+    obstacle.width = 20.0;
     obstacle.height = 4.0;
     obstacles.push_back(obstacle);
 
 	//2
 	obstacle.x = -6;
 	obstacle.y = -4;
-	obstacle.width = 6;
+	obstacle.width = 10;
 	obstacle.height = 8;
 	obstacles.push_back(obstacle);
 
 	//3
 	obstacle.x = 2;
 	obstacle.y = -4;
-	obstacle.width = 4;
+	obstacle.width = 8;
 	obstacle.height = 8;
 	obstacles.push_back(obstacle);
 
 	//4
 	obstacle.x = -6;
 	obstacle.y = 6;
-	obstacle.width = 12;
+	obstacle.width = 20;
 	obstacle.height = 2;
 	obstacles.push_back(obstacle);
 
@@ -116,7 +116,7 @@ int main(int, char **)
 			{
 				case PENDULUM:
 					std::cout << "Running in empty environment \n";
-				    planWithSimpleSetupPendulum(-1, 1, -3.14/2, 3.14/2);
+				    planWithSimpleSetupPendulum(-9.81, 9.81, -3.14/2, 3.14/2);
 				    break;
 				case CAR:
 					std::cout << "Running in street like environment\n";
