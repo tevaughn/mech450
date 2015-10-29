@@ -15,11 +15,7 @@ void CarODE (const ompl::control::ODESolver::StateType& q, const ompl::control::
 
 }
 
-<<<<<<< HEAD
-
-=======
 /*
->>>>>>> a960255adb7899f9e066820bfc09f2543e56966f
 // custom projection for KPIECE1
 class CarProjection : public ompl::base::ProjectionEvaluator
 {

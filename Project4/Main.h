@@ -45,7 +45,6 @@ void CarPostIntegration (const ompl::base::State* /*state*/, const ompl::control
 
 ompl::base::ValidStateSamplerPtr allocUniformStateSampler(const ompl::base::SpaceInformation *si);
 
-<<<<<<< HEAD
 // custom pendulum projection for KPIECE1
 class myProjection : public ompl::base::ProjectionEvaluator
 {
@@ -70,7 +69,6 @@ public:
         projection(1) = (values[2] + values[3]) / 2.0;
     }
 };
-=======
 
 void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double startT, double goalT, int plannerChoice);
 
@@ -91,7 +89,3 @@ bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::S
 bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state);
 
 bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectangle>& obstacles);
-
-
-
->>>>>>> a960255adb7899f9e066820bfc09f2543e56966f

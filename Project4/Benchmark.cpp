@@ -67,8 +67,11 @@ void runPendulumBenchmark(int low, int high, int clow, int chigh,  double startT
     ss.setStartAndGoalStates(start, goal);
 	ss.setup();
 
-    std::vector<double> cs(1);
+    std::vector<double> cs(2);
     cs[0] = 35;
+    cs[1] = 35;
+
+    space->registerDefaultProjection(ompl::base::ProjectionEvaluatorPtr(new myProjection(space)));
     ss.getStateSpace()->getDefaultProjection()->setCellSizes(cs);
 
     runtime_limit = 10.0;
@@ -144,7 +147,8 @@ void runCarBenchmark(const std::vector<Rectangle>& obstacles,  int low, int high
 	ss.setup();
 
     std::vector<double> cs(2);
-    cs[0] = 35; cs[1] = 35;
+    cs[0] = 35;
+    cs[1] = 35;
     ss.getStateSpace()->getDefaultProjection()->setCellSizes(cs);
 
     runtime_limit = 10.0;
