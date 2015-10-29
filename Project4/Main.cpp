@@ -60,7 +60,7 @@ int main(int, char **)
 	obstacles.push_back(obstacle);
 
 	//4
-	obstacle.x = -6;
+	obstacle.x = -10;
 	obstacle.y = 6;
 	obstacle.width = 20;
 	obstacle.height = 2;
