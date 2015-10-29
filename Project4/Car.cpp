@@ -27,8 +27,9 @@ void CarPostIntegration (const ompl::base::State* /*state*/, const ompl::control
 bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state, const std::vector<Rectangle>& obstacles)
 {
 
-    const ompl::base::SE2StateSpace::StateType *se2state = state->as<ompl::base::SE2StateSpace::StateType>();
-    const ompl::base::RealVectorStateSpace::StateType *pos = se2state->as<ompl::base::RealVectorStateSpace::StateType>(0);
+    const ompl::base::CompoundState *compoundState = state->as<ompl::base::CompoundState>();
+    const ompl::base::SE2StateSpace::StateType *se2state = compoundState->as<ompl::base::SE2StateSpace::StateType>(0);
+	const ompl::base::RealVectorStateSpace::StateType *pos = se2state->as<ompl::base::RealVectorStateSpace::StateType>(0);
 
 	return si->satisfiesBounds(state) && isValidStatePoint(pos, obstacles);
 }

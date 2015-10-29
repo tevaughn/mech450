@@ -168,8 +168,8 @@ namespace ompl
             double distanceFunction(const Motion *a, const Motion *b) const
             {
 				double dist = si_->distance(a->state, b->state);
-				for (base::State *state : a->r) {
-					if (si_->distance(state, b->state) < dist) {
+				for (base::State *state : b->r) {
+					if (si_->distance(state, a->state) < dist) {
 						return dist;
 					}
 				}

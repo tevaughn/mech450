@@ -132,21 +132,24 @@ ompl::base::PlannerStatus ompl::control::RGRRT::solve(const base::PlannerTermina
     Control       *rctrl = rmotion->control;
     base::State  *xstate = si_->allocState();
 
-	base::State *addstate = si_->allocState();
-    std::cout << "states allocated \n";
+	
 
     while (ptc == false)
     {
-		for (Control *control : controls) {
-			siC_->propagate(rstate, control, 10, addstate);
-			rmotion->r.push_back(addstate);
-		}
+
 
         /* sample random state (with goal biasing0) */
         if (goal_s && rng_.uniform01() < goalBias_ && goal_s->canSample())
             goal_s->sampleGoal(rstate);
         else
             sampler_->sampleUniform(rstate);
+		/* Creating reachable set */
+		for (Control *control : controls) {
+			base::State *addstate = si_->allocState();
+
+			siC_->propagate(rstate, control, 10, addstate);
+			rmotion->r.push_back(addstate);
+		}
 
         /* find closest state in the tree */
         Motion *nmotion = nn_->nearest(rmotion);
