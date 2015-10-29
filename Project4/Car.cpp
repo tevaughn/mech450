@@ -15,7 +15,11 @@ void CarODE (const ompl::control::ODESolver::StateType& q, const ompl::control::
 
 }
 
+<<<<<<< HEAD
 
+=======
+/*
+>>>>>>> a960255adb7899f9e066820bfc09f2543e56966f
 // custom projection for KPIECE1
 class CarProjection : public ompl::base::ProjectionEvaluator
 {
@@ -40,6 +44,7 @@ public:
 		projection(1) = (values[2] + values[3]) / 2.0;
 	}
 };
+*/
 
 // This is a callback method invoked after numerical integration.
 void CarPostIntegration (const ompl::base::State* /*state*/, const ompl::control::Control* /*control*/, const double /*duration*/, ompl::base::State *result)
@@ -56,9 +61,6 @@ bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::S
 
      const ompl::base::RealVectorStateSpace::StateType *pos = se2state->as<ompl::base::RealVectorStateSpace::StateType>(0);
 
-     //const ompl::base::SO2StateSpace::StateType *rot = se2state->as<ompl::base::SO2StateSpace::StateType>(1);
- 
-    // return a value that is always true but uses the two variables we define, so we avoid compiler warnings
 	return si->satisfiesBounds(state) && isValidStatePoint(pos, obstacles);
 }
 

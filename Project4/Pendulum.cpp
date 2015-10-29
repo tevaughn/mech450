@@ -29,7 +29,6 @@ void PendulumPostIntegration (const ompl::base::State* /*state*/, const ompl::co
 
 bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state)
 {
-	
 	return si->satisfiesBounds(state);
 }
 

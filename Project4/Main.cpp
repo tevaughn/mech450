@@ -2,8 +2,6 @@
 
 using namespace ompl;
 
-void runBenchmarks(int twistycoolORcubicles);
-
 base::ValidStateSamplerPtr allocUniformStateSampler(const base::SpaceInformation *si)
 {
     return base::ValidStateSamplerPtr(new base::UniformValidStateSampler(si));
@@ -86,11 +84,22 @@ int main(int, char **)
 				std::cout << "Benchmark for: "<< std::endl;
 				std::cout << " (1) Pendulum" << std::endl;
 				std::cout << " (2) Car" << std::endl;
-
+				
 				std::cin >> benchmarkChoice;
 			} while (benchmarkChoice < 1 || benchmarkChoice > 2);
-				//runBenchmarks(benchmarkChoice);
-				break;
+
+			switch(benchmarkChoice)
+			{
+				case PENDULUM:
+					runPendulumBenchmark(-10, 10, -10, 10, -3.14/2, 3.14/2);
+					break;
+				case CAR:
+					runCarBenchmark(obstacles, -10, 10, -10, 10, -5, -5, 5, 5);
+					break;
+			}
+	    
+			break;
+
 		case PLANNER:
 			int envChoice;
 			do
@@ -118,7 +127,7 @@ int main(int, char **)
 				case PENDULUM:
 					std::cout << "Running in empty environment \n";
                     //changed bounds to 10 because 9.81 is not an int
-				    planWithSimpleSetupPendulum(-1, 1, -10, 10, -3.14/2, 3.14/2, plannerChoice);
+				    planWithSimpleSetupPendulum(-10, 10, -10, 10, -3.14/2, 3.14/2, plannerChoice);
 				    break;
 				case CAR:
 					std::cout << "Running in street like environment\n";
