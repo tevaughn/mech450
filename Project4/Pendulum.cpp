@@ -55,16 +55,16 @@ void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double 
 
 	cspace->as<ompl::control::RealVectorControlSpace>()->setBounds(cbounds);
 
-	std::vector<ompl::control::Control*> controls;
-	ompl::control::Control* control;
+	std::vector<ompl::control::Control*> controls;	
+
 	double interval = (chigh - clow)/10;
-	for (double low = clow; low < interval; low += interval) {
-			ompl::control::ControlSpacePtr tempcspace(new 						ompl::control::RealVectorControlSpace(space, 2));
-			ompl::base::RealVectorBounds cbounds(2);
-			cbounds.setLow(low);
-			cbounds.setHigh(low+interval);
-			tempcspace->as<ompl::control::RealVectorControlSpace>()->setBounds(cbounds);
-			control = new PendulumControl();
+	for (double low = clow; low <= chigh; low += interval) {
+
+            ompl::control::Control* control = cspace->allocControl();
+
+            control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
+            control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
+
 			controls.push_back(control);
 	}
 
@@ -114,7 +114,7 @@ void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double 
     }
 
     // Attempt to solve the problem within the given time (seconds)
-    ompl::base::PlannerStatus solved = ss.solve(10.0);
+    ompl::base::PlannerStatus solved = ss.solve(20.0);
 
     if (solved)
     {

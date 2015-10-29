@@ -1,21 +1,18 @@
 #include "Main.h"
 
 void CarODE (const ompl::control::ODESolver::StateType& q, const ompl::control::Control* control, ompl::control::ODESolver::StateType& qdot) {
-    //std::cout << "called the ODE \n";
-	const double *u = control->as<ompl::control::RealVectorControlSpace::ControlType>()->values;
-    //std::cout << "Set the control things \n";	
+
+	const double *u = control->as<ompl::control::RealVectorControlSpace::ControlType>()->values;	
     const double theta = q[2];
     const double velocity = q[3];
 
 	// Zero out qdot
-    //std::cout << u.size() << " " << q.size() << " " << qdot.size() << "\n";
 	qdot.resize (q.size (), 0);
-    //std::cout << u.size() << " " << q.size() << " " << qdot.size() << "\n";
+    
 	qdot[0] = velocity * cos(theta);
 	qdot[1] = velocity * sin(theta);
 	qdot[2] = u[0];
     qdot[3] = u[1];
-    //std::cout << "and done \n";
 
 }
 
@@ -70,17 +67,16 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 	cbounds.setHigh(chigh);
 
 	cspace->as<ompl::control::RealVectorControlSpace>()->setBounds(cbounds);
+	std::vector<ompl::control::Control*> controls;	
 
-	std::vector<ompl::control::Control*> controls;
-	ompl::control::Control* control;
 	double interval = (chigh - clow)/10;
-	for (double low = clow; low < interval; low += interval) {
-			ompl::control::ControlSpacePtr tempcspace(new ompl::control::RealVectorControlSpace(space, 2));
-			ompl::base::RealVectorBounds cbounds(2);
-			cbounds.setLow(low);
-			cbounds.setHigh(low+interval);
-			tempcspace->as<ompl::control::RealVectorControlSpace>()->setBounds(cbounds);
-			control = new CarControl();
+	for (double low = clow; low <= chigh; low += interval) {
+
+            ompl::control::Control* control = cspace->allocControl();
+
+            control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
+            control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
+
 			controls.push_back(control);
 	}
 
@@ -127,7 +123,7 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 	}
 
     // Attempt to solve the problem within the given time (seconds)
-    ompl::base::PlannerStatus solved = ss.solve(10.0);
+    ompl::base::PlannerStatus solved = ss.solve(20.0);
 
     if (solved)
     {

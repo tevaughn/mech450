@@ -133,7 +133,7 @@ ompl::base::PlannerStatus ompl::control::RGRRT::solve(const base::PlannerTermina
     base::State  *xstate = si_->allocState();
 
 	base::State *addstate = si_->allocState();
-	
+    std::cout << "states allocated \n";
 
     while (ptc == false)
     {
@@ -142,7 +142,7 @@ ompl::base::PlannerStatus ompl::control::RGRRT::solve(const base::PlannerTermina
 			rmotion->r.push_back(addstate);
 		}
 
-        /* sample random state (with goal biasing) */
+        /* sample random state (with goal biasing0) */
         if (goal_s && rng_.uniform01() < goalBias_ && goal_s->canSample())
             goal_s->sampleGoal(rstate);
         else
