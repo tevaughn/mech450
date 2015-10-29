@@ -7,7 +7,7 @@ void CarODE (const ompl::control::ODESolver::StateType& q, const ompl::control::
     const double velocity = q[3];
 
 	// Zero out qdot
-	qdot.resize (q.size (), 0);
+	qdot.resize (q.size(), 0);
     
 	qdot[0] = velocity * cos(theta);
 	qdot[1] = velocity * sin(theta);
@@ -72,12 +72,12 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 	double interval = (chigh - clow)/10;
 	for (double low = clow; low <= chigh; low += interval) {
 
-            ompl::control::Control* control = cspace->allocControl();
+        ompl::control::Control* control = cspace->allocControl();
 
-            control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
-            control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
+        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
+        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
 
-			controls.push_back(control);
+        controls.push_back(control);
 	}
 
 	// Define a simple setup class

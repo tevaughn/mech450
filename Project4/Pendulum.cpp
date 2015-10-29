@@ -12,7 +12,7 @@ void PendulumODE (const ompl::control::ODESolver::StateType& q, const ompl::cont
 
 
 	// Zero out qdot
-	qdot.resize (q.size (), 0);
+	qdot.resize (q.size(), 0);
 
 	qdot[0] = q[1];
 	qdot[1] = -9.81 * cos(theta) + u[0];
@@ -60,12 +60,12 @@ void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double 
 	double interval = (chigh - clow)/10;
 	for (double low = clow; low <= chigh; low += interval) {
 
-            ompl::control::Control* control = cspace->allocControl();
+        ompl::control::Control* control = cspace->allocControl();
 
-            control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
-            control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
+        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
+        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
 
-			controls.push_back(control);
+        controls.push_back(control);
 	}
 
 	// Define a simple setup class
