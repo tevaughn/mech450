@@ -55,7 +55,7 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 
     vspace->as<ompl::base::RealVectorStateSpace>()->setBounds(vbounds);
 
-    space = space + vspace; 
+    space = space + vspace;
 
 
  	// create a control space
@@ -86,7 +86,7 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
     // Setup the StateValidityChecker
 	ss.setStateValidityChecker(boost::bind(&isStateValid, ss.getSpaceInformation().get(), _1, obstacles));
 
-	// Set propagationg routine
+	// Set propagation routine
 	ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &CarODE));
 	ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &CarPostIntegration));
 
