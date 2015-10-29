@@ -40,12 +40,13 @@
 #include "ompl/tools/config/SelfConfig.h"
 #include <limits>
 
-ompl::control::RGRRT::RGRRT(const SpaceInformationPtr &si) : base::Planner(si, "RGRRT")
+ompl::control::RGRRT::RGRRT(const SpaceInformationPtr &si, const std::vector<Control*> c) : base::Planner(si, "RGRRT")
 {
     specs_.approximateSolutions = true;
     siC_ = si.get();
     addIntermediateStates_ = false;
     lastGoalMotion_ = NULL;
+	controls = c;
 
     goalBias_ = 0.05;
 
@@ -95,7 +96,7 @@ void ompl::control::RGRRT::freeMemory()
     }
 }
 
-ompl::base::PlannerStatus ompl::control::RGRRT::solve(const base::PlannerTerminationCondition &ptc, const std::vector<Control*> controls)
+ompl::base::PlannerStatus ompl::control::RGRRT::solve(const base::PlannerTerminationCondition &ptc)
 {
     checkValidity();
     base::Goal                   *goal = pdef_->getGoal().get();

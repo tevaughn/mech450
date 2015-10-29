@@ -120,7 +120,7 @@ int main(int, char **)
                 std::cout << " (3) RGRRT" << std::endl;
 
                 std::cin >> plannerChoice;
-            } while (plannerChoice < 1 || plannerChoice > 2);
+            } while (plannerChoice < 1 || plannerChoice > 3);
 
 			switch(envChoice)
 			{

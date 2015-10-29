@@ -3,12 +3,12 @@ OMPL_DIR = /usr
 CXX_FLAGS = -Wall -O2 -std=c++11 # change -02 to -g when debugging code
 INCLUDE_FLAGS = -I${OMPL_DIR}/include
 LD_FLAGS = -L${OMPL_DIR}/lib -lompl -lompl_app_base -lompl_app -lboost_program_options -lboost_system
-CXX=c++
+CXX=clang++
 
 all: Main
 
-Main: Main.o CollisionChecking.o Car.o Pendulum.o Benchmark.o
-	$(CXX) $(CXXFLAGS) -o Main Main.o CollisionChecking.o Car.o Pendulum.o Benchmark.o $(LD_FLAGS)
+Main: Main.o CollisionChecking.o Car.o Pendulum.o Benchmark.o RG-RRT.o
+	$(CXX) $(CXXFLAGS) -o Main Main.o CollisionChecking.o Car.o Pendulum.o Benchmark.o RG-RRT.o $(LD_FLAGS)
 
 clean:
 	rm -f *.o Main

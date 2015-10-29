@@ -34,8 +34,8 @@
 
 /* Author: Ioan Sucan */
 
-#ifndef OMPL_CONTROL_PLANNERS_RRT_RRT_
-#define OMPL_CONTROL_PLANNERS_RRT_RRT_
+#ifndef OMPL_CONTROL_PLANNERS_RGRRT_RGRRT_
+#define OMPL_CONTROL_PLANNERS_RGRRT_RGRRT_
 
 #include "ompl/control/planners/PlannerIncludes.h"
 #include "ompl/datastructures/NearestNeighborsLinear.h"
@@ -68,12 +68,12 @@ namespace ompl
         public:
 
             /** \brief Constructor */
-            RGRRT(const SpaceInformationPtr &si);
+            RGRRT(const SpaceInformationPtr &si, const std::vector<Control*> controls);
 
             virtual ~RGRRT();
 
             /** \brief Continue solving for some amount of time. Return true if solution was found. */
-            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc, const std::vector<Control*> controls);
+            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
 
             /** \brief Clear datastructures. Call this function if the
                 input data to the planner has changed and you do not
@@ -200,6 +200,10 @@ namespace ompl
 
             /** \brief The most recent goal motion.  Used for PlannerData computation */
             Motion                                         *lastGoalMotion_;
+
+
+			/** \brief The controls to use for computing the reachable set */
+			std::vector<Control*> 							controls;
         };
 
     }

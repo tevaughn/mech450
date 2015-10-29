@@ -1,6 +1,8 @@
 #include <cmath>
 #include <boost/bind.hpp>
 
+
+
 // Including SimpleSetup.h will pull in MOST of what you need to plan
 #include <ompl/base/samplers/UniformValidStateSampler.h>
 
@@ -8,6 +10,7 @@
 #include <omplapp/apps/SE3RigidBodyPlanning.h>
 
 #include <ompl/control/planners/rrt/RRT.h>
+#include "RG-RRT.h"
 #include <ompl/control/planners/kpiece/KPIECE1.h>
 
 #include <ompl/control/SpaceInformation.h>
@@ -20,6 +23,8 @@
 #include <fstream>
 #include <valarray>
 #include <limits>
+
+
 
 // The collision checker produced in project 2
 #include "CollisionChecking.h"
@@ -89,3 +94,16 @@ bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::S
 bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state);
 
 bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectangle>& obstacles);
+
+
+class CarControl : public ompl::control::Control {
+
+	public:
+		CarControl() {}
+};
+
+class PendulumControl : public ompl::control::Control {
+
+	public:
+		PendulumControl() {}
+};

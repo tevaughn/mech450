@@ -55,6 +55,19 @@ void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double 
 
 	cspace->as<ompl::control::RealVectorControlSpace>()->setBounds(cbounds);
 
+	std::vector<ompl::control::Control*> controls;
+	ompl::control::Control* control;
+	double interval = (chigh - clow)/10;
+	for (double low = clow; low < interval; low += interval) {
+			ompl::control::ControlSpacePtr tempcspace(new 						ompl::control::RealVectorControlSpace(space, 2));
+			ompl::base::RealVectorBounds cbounds(2);
+			cbounds.setLow(low);
+			cbounds.setHigh(low+interval);
+			tempcspace->as<ompl::control::RealVectorControlSpace>()->setBounds(cbounds);
+			control = new PendulumControl();
+			controls.push_back(control);
+	}
+
 	// Define a simple setup class
 	ompl::control::SimpleSetup ss(cspace);
 
@@ -96,8 +109,7 @@ void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double 
         ss.setPlanner(planner);
     }
     else if (plannerChoice == RGRRT) {
-        std::cout << "RGRRT NOT IMPLEMENTED YET!!! Using rrt\n";
-        ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
+        ompl::base::PlannerPtr planner(new ompl::control::RGRRT(ss.getSpaceInformation(), controls));
         ss.setPlanner(planner);
     }
 
