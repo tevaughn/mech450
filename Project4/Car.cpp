@@ -1,46 +1,23 @@
 #include "Main.h"
 
 void CarODE (const ompl::control::ODESolver::StateType& q, const ompl::control::Control* control, ompl::control::ODESolver::StateType& qdot) {
-     	
+    //std::cout << "called the ODE \n";
 	const double *u = control->as<ompl::control::RealVectorControlSpace::ControlType>()->values;
-	const double theta = q[2];
-	double carLength = 0.5;
+    //std::cout << "Set the control things \n";	
+    const double theta = q[2];
+    const double velocity = q[3];
 
 	// Zero out qdot
+    //std::cout << u.size() << " " << q.size() << " " << qdot.size() << "\n";
 	qdot.resize (q.size (), 0);
-
-	qdot[0] = u[0] * cos(theta);
-	qdot[1] = u[0] * sin(theta);
-	qdot[2] = u[0] * tan(u[1]) / carLength;
+    //std::cout << u.size() << " " << q.size() << " " << qdot.size() << "\n";
+	qdot[0] = velocity * cos(theta);
+	qdot[1] = velocity * sin(theta);
+	qdot[2] = u[0];
+    qdot[3] = u[1];
+    //std::cout << "and done \n";
 
 }
-
-/*
-// custom projection for KPIECE1
-class CarProjection : public ompl::base::ProjectionEvaluator
-{
-public:
-	CarProjection(const ompl::base::StateSpacePtr &space) : ompl::base::ProjectionEvaluator(space)
-	{
-	}
-	virtual unsigned int getDimension(void) const
-	{
-		return 2;
-	}
-	virtual void defaultCellSizes(void)
-	{
-		cellSizes_.resize(2);
-		cellSizes_[0] = 0.1;
-		cellSizes_[1] = 0.25;
-	}
-	virtual void project(const ompl::base::State *state, ompl::base::EuclideanProjection &projection) const
-	{
-		const double *values = state->as<ompl::base::RealVectorStateSpace::StateType>()->values;
-		projection(0) = (values[0] + values[1]) / 2.0;
-		projection(1) = (values[2] + values[3]) / 2.0;
-	}
-};
-*/
 
 // This is a callback method invoked after numerical integration.
 void CarPostIntegration (const ompl::base::State* /*state*/, const ompl::control::Control* /*control*/, const double /*duration*/, ompl::base::State *result)
@@ -52,10 +29,9 @@ void CarPostIntegration (const ompl::base::State* /*state*/, const ompl::control
 
 bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state, const std::vector<Rectangle>& obstacles)
 {
-     //    ob::ScopedState<ob::SE2StateSpace>
-     const ompl::base::SE2StateSpace::StateType *se2state = state->as<ompl::base::SE2StateSpace::StateType>();
 
-     const ompl::base::RealVectorStateSpace::StateType *pos = se2state->as<ompl::base::RealVectorStateSpace::StateType>(0);
+    const ompl::base::SE2StateSpace::StateType *se2state = state->as<ompl::base::SE2StateSpace::StateType>();
+    const ompl::base::RealVectorStateSpace::StateType *pos = se2state->as<ompl::base::RealVectorStateSpace::StateType>(0);
 
 	return si->satisfiesBounds(state) && isValidStatePoint(pos, obstacles);
 }
@@ -64,6 +40,8 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 {
     // Create the state (configuration) space for your system
     ompl::base::StateSpacePtr space(new ompl::base::SE2StateSpace());
+    ompl::base::StateSpacePtr vspace(new ompl::base::RealVectorStateSpace(1));
+ 
 
     // We need to set bounds on R^2
     ompl::base::RealVectorBounds bounds(2);
@@ -72,7 +50,17 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 
     // Cast the r2 pointer to the derived type, then set the bounds
     space->as<ompl::base::SE2StateSpace>()->setBounds(bounds);
-    
+
+    // We need to set bounds on velocity
+    ompl::base::RealVectorBounds vbounds(1);
+    vbounds.setLow(low);
+    vbounds.setHigh(high);
+
+    vspace->as<ompl::base::RealVectorStateSpace>()->setBounds(vbounds);
+
+    space = space + vspace; 
+
+
  	// create a control space
 	ompl::control::ControlSpacePtr cspace(new ompl::control::RealVectorControlSpace(space, 2));
  
@@ -87,7 +75,7 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 	ompl::control::Control* control;
 	double interval = (chigh - clow)/10;
 	for (double low = clow; low < interval; low += interval) {
-			ompl::control::ControlSpacePtr tempcspace(new 						ompl::control::RealVectorControlSpace(space, 2));
+			ompl::control::ControlSpacePtr tempcspace(new ompl::control::RealVectorControlSpace(space, 2));
 			ompl::base::RealVectorBounds cbounds(2);
 			cbounds.setLow(low);
 			cbounds.setHigh(low+interval);
@@ -95,12 +83,11 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 			control = new CarControl();
 			controls.push_back(control);
 	}
-	
+
 	// Define a simple setup class
 	ompl::control::SimpleSetup ss(cspace);
 
     // Setup the StateValidityChecker
-    //ss.setStateValidityChecker(boost::bind(isValidStatePoint, _1, obstacles)); 
 	ss.setStateValidityChecker(boost::bind(&isStateValid, ss.getSpaceInformation().get(), _1, obstacles));
 
 	// Set propagationg routine
@@ -108,15 +95,17 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 	ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &CarPostIntegration));
 
     // Specify the start and goal states
-    ompl::base::ScopedState<ompl::base::SE2StateSpace> start(space);
-	start->setX(startX);
-	start->setY(startY);
-	start->setYaw(0.0);
+    ompl::base::ScopedState<> start(space);
+    start[0] = startX;
+    start[1] = startY;
+    start[2] = 0.0;
+    start[3] = 0.0;
 
-    ompl::base::ScopedState<ompl::base::SE2StateSpace> goal(space);
-	goal->setX(goalX);
-	goal->setY(goalY);
-	goal->setYaw(0.0);
+    ompl::base::ScopedState<> goal(space);
+    goal[0] = goalX;
+    goal[1] = goalY;
+    goal[2] = 0.0;
+    goal[3] = 0.0;
 
     // set the start and goal states
     ss.setStartAndGoalStates(start, goal);
