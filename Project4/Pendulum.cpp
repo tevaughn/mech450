@@ -29,11 +29,10 @@ void PendulumPostIntegration (const ompl::base::State* /*state*/, const ompl::co
 
 bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state)
 {
-	
 	return si->satisfiesBounds(state);
 }
 
-void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double startT, double goalT)
+void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double startT, double goalT, int plannerChoice)
 {
     // Create the state (configuration) space for your system
     ompl::base::StateSpacePtr space(new ompl::base::RealVectorStateSpace(1));
@@ -61,8 +60,8 @@ void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double 
 
     // Setup the StateValidityChecker
 	ss.setStateValidityChecker(boost::bind(&isStateValid, ss.getSpaceInformation().get(), _1));
-	std::cout << "valided\n";
-	// Set propagationg routine
+	std::cout << "validated\n";
+	// Set propagation routine
 	ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &PendulumODE));
 
 	ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &PendulumPostIntegration));
@@ -87,9 +86,20 @@ void planWithSimpleSetupPendulum(int low, int high, int clow, int chigh, double 
 	ss.setup();
 
     // Specify a planning algorithm to use
-    ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
 
-    ss.setPlanner(planner);
+    if (plannerChoice == RRT) {
+        ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
+        ss.setPlanner(planner);
+    } else if (plannerChoice == KPIECE) {
+        ompl::base::PlannerPtr planner(new ompl::control::KPIECE1(ss.getSpaceInformation()));
+        space->registerDefaultProjection(ompl::base::ProjectionEvaluatorPtr(new myProjection(space)));
+        ss.setPlanner(planner);
+    }
+    else if (plannerChoice == RGRRT) {
+        std::cout << "RGRRT NOT IMPLEMENTED YET!!! Using rrt\n";
+        ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
+        ss.setPlanner(planner);
+    }
 
     // Attempt to solve the problem within the given time (seconds)
     ompl::base::PlannerStatus solved = ss.solve(10.0);
