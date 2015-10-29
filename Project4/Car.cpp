@@ -114,7 +114,7 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 		ss.setPlanner(planner);
 	} else if (plannerChoice == KPIECE) {
 		ompl::base::PlannerPtr planner(new ompl::control::KPIECE1(ss.getSpaceInformation()));
-		//space->registerDefaultProjection(ompl::base::ProjectionEvaluatorPtr(new CarProjection(space)));
+		space->registerDefaultProjection(ompl::base::ProjectionEvaluatorPtr(new myProjection(space)));
 		ss.setPlanner(planner);
 	}
 	else if (plannerChoice == RGRRT) {
