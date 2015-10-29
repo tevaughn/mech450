@@ -148,7 +148,9 @@ ompl::base::PlannerStatus ompl::control::RGRRT::solve(const base::PlannerTermina
 			base::State *addstate = si_->allocState();
 
 			siC_->propagate(rstate, control, 10, addstate);
-			rmotion->r.push_back(addstate);
+			if (si_->getStateValidityChecker()->isValid(addstate)) {
+				rmotion->r.push_back(addstate);
+			}
 		}
 
         /* find closest state in the tree */
