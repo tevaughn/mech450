@@ -127,7 +127,7 @@ int main(int, char **)
 				case PENDULUM:
 					std::cout << "Running in empty environment \n";
                     //changed bounds to 10 because 9.81 is not an int
-				    planWithSimpleSetupPendulum(-10, 10, -10, 10, -3.14/2, 3.14/2, plannerChoice);
+				    planWithSimpleSetupPendulum(-2, 2, -10, 10, -3.14/2, 3.14/2, plannerChoice);
 				    break;
 				case CAR:
 					std::cout << "Running in street like environment\n";
