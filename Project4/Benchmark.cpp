@@ -67,23 +67,36 @@ void runPendulumBenchmark(int low, int high, int clow, int chigh,  double startT
     ss.setStartAndGoalStates(start, goal);
 	ss.setup();
 
+    // set up projections for kpiece
     std::vector<double> cs(2);
     cs[0] = 35;
     cs[1] = 35;
-
     space->registerDefaultProjection(ompl::base::ProjectionEvaluatorPtr(new myProjection(space)));
     ss.getStateSpace()->getDefaultProjection()->setCellSizes(cs);
 
-    runtime_limit = 10.0;
+    // set up controls for rgrrt
+    std::vector<ompl::control::Control*> controls;
+    double interval = (chigh - clow)/10;
+    for (double low = clow; low <= chigh; low += interval) {
+
+        ompl::control::Control* control = cspace->allocControl();
+
+        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
+        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
+
+        controls.push_back(control);
+    }
+
+    runtime_limit = 20.0;    // set high because RG-RRT sometimes takes awhile to find a good solution
     memory_limit  = 10000.0; // set high because memory usage is not always estimated correctly
-    run_count     = 3;
+    run_count     = 25;
 
     tools::Benchmark::Request request(runtime_limit, memory_limit, run_count);
     tools::Benchmark b(ss, benchmark_name);
 
     b.addPlanner(base::PlannerPtr(new control::RRT(ss.getSpaceInformation())));
     b.addPlanner(base::PlannerPtr(new control::KPIECE1(ss.getSpaceInformation())));
-    //b.addPlanner(base::PlannerPtr(new base::RG-RRT(ss.getSpaceInformation())));
+    b.addPlanner(base::PlannerPtr(new ompl::control::RGRRT(ss.getSpaceInformation(), controls)));
 
     ss.getSpaceInformation()->setValidStateSamplerAllocator(&allocUniformStateSampler);
     b.setExperimentName(benchmark_name + "_uniform_sampler");
@@ -146,14 +159,28 @@ void runCarBenchmark(const std::vector<Rectangle>& obstacles,  int low, int high
     ss.setStartAndGoalStates(start, goal);
 	ss.setup();
 
+    // set up projections for kpiece
     std::vector<double> cs(2);
     cs[0] = 35;
     cs[1] = 35;
     ss.getStateSpace()->getDefaultProjection()->setCellSizes(cs);
 
-    runtime_limit = 10.0;
+    // set up controls for rgrrt
+    std::vector<ompl::control::Control*> controls;
+    double interval = (chigh - clow)/10;
+    for (double low = clow; low <= chigh; low += interval) {
+
+        ompl::control::Control* control = cspace->allocControl();
+
+        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
+        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
+
+        controls.push_back(control);
+    }
+
+    runtime_limit = 20.0;    // set high because RG-RRT sometimes takes awhile to find a good solution
     memory_limit  = 10000.0; // set high because memory usage is not always estimated correctly
-    run_count     = 3;
+    run_count     = 25;
 
     tools::Benchmark::Request request(runtime_limit, memory_limit, run_count);
     tools::Benchmark b(ss, benchmark_name);
