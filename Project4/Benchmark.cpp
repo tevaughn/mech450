@@ -102,7 +102,7 @@ void runPendulumBenchmark(int low, int high, int clow, int chigh,  double startT
     b.setExperimentName(benchmark_name + "_uniform_sampler");
     b.benchmark(request);
 
-	b.saveResultsToFile("benchmark.log");
+	b.saveResultsToFile("pendulum_benchmark.log");
 
 }
 
@@ -114,6 +114,7 @@ void runCarBenchmark(const std::vector<Rectangle>& obstacles,  int low, int high
 
 	// Create the state (configuration) space for your system
     ompl::base::StateSpacePtr space(new ompl::base::SE2StateSpace());
+    ompl::base::StateSpacePtr vspace(new ompl::base::RealVectorStateSpace(1));
 
     // We need to set bounds on R^2
     ompl::base::RealVectorBounds bounds(2);
@@ -122,7 +123,16 @@ void runCarBenchmark(const std::vector<Rectangle>& obstacles,  int low, int high
 
     // Cast the r2 pointer to the derived type, then set the bounds
     space->as<ompl::base::SE2StateSpace>()->setBounds(bounds);
-    
+
+    // We need to set bounds on velocity
+    ompl::base::RealVectorBounds vbounds(1);
+    vbounds.setLow(low);
+    vbounds.setHigh(high);
+
+    vspace->as<ompl::base::RealVectorStateSpace>()->setBounds(vbounds);
+
+    space = space + vspace;
+
  	// create a control space
 	ompl::control::ControlSpacePtr cspace(new ompl::control::RealVectorControlSpace(space, 2));
  
@@ -132,6 +142,20 @@ void runCarBenchmark(const std::vector<Rectangle>& obstacles,  int low, int high
 	cbounds.setHigh(chigh);
 
 	cspace->as<ompl::control::RealVectorControlSpace>()->setBounds(cbounds);
+
+    // set up controls for rgrrt
+    std::vector<ompl::control::Control*> controls;
+
+    double interval = (chigh - clow)/10;
+    for (double low = clow; low <= chigh; low += interval) {
+
+        ompl::control::Control* control = cspace->allocControl();
+
+        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
+        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
+
+        controls.push_back(control);
+    }
 
 	// Define a simple setup class
 	ompl::control::SimpleSetup ss(cspace);
@@ -145,15 +169,17 @@ void runCarBenchmark(const std::vector<Rectangle>& obstacles,  int low, int high
 	ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &CarPostIntegration));
 
     // Specify the start and goal states
-    ompl::base::ScopedState<ompl::base::SE2StateSpace> start(space);
-	start->setX(startX);
-	start->setY(startY);
-	start->setYaw(0.0);
+    ompl::base::ScopedState<> start(space);
+    start[0] = startX;
+    start[1] = startY;
+    start[2] = 0.0;
+    start[3] = 0.0;
 
-    ompl::base::ScopedState<ompl::base::SE2StateSpace> goal(space);
-	goal->setX(goalX);
-	goal->setY(goalY);
-	goal->setYaw(0.0);
+    ompl::base::ScopedState<> goal(space);
+    goal[0] = goalX;
+    goal[1] = goalY;
+    goal[2] = 0.0;
+    goal[3] = 0.0;
 
     // set the start and goal states
     ss.setStartAndGoalStates(start, goal);
@@ -163,20 +189,8 @@ void runCarBenchmark(const std::vector<Rectangle>& obstacles,  int low, int high
     std::vector<double> cs(2);
     cs[0] = 35;
     cs[1] = 35;
+    space->registerDefaultProjection(ompl::base::ProjectionEvaluatorPtr(new myProjection(space)));
     ss.getStateSpace()->getDefaultProjection()->setCellSizes(cs);
-
-    // set up controls for rgrrt
-    std::vector<ompl::control::Control*> controls;
-    double interval = (chigh - clow)/10;
-    for (double low = clow; low <= chigh; low += interval) {
-
-        ompl::control::Control* control = cspace->allocControl();
-
-        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
-        control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
-
-        controls.push_back(control);
-    }
 
     runtime_limit = 20.0;    // set high because RG-RRT sometimes takes awhile to find a good solution
     memory_limit  = 10000.0; // set high because memory usage is not always estimated correctly
@@ -193,6 +207,6 @@ void runCarBenchmark(const std::vector<Rectangle>& obstacles,  int low, int high
     b.setExperimentName(benchmark_name + "_uniform_sampler");
     b.benchmark(request);
 
-	b.saveResultsToFile("benchmark.log");
+	b.saveResultsToFile("car_benchmark.log");
 
 }
