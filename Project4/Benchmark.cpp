@@ -187,7 +187,7 @@ void runCarBenchmark(const std::vector<Rectangle>& obstacles,  int low, int high
 
     b.addPlanner(base::PlannerPtr(new control::RRT(ss.getSpaceInformation())));
     b.addPlanner(base::PlannerPtr(new control::KPIECE1(ss.getSpaceInformation())));
-    //b.addPlanner(base::PlannerPtr(new base::RG-RRT(ss.getSpaceInformation())));
+    b.addPlanner(base::PlannerPtr(new ompl::control::RGRRT(ss.getSpaceInformation(), controls)));
 
     ss.getSpaceInformation()->setValidStateSamplerAllocator(&allocUniformStateSampler);
     b.setExperimentName(benchmark_name + "_uniform_sampler");
