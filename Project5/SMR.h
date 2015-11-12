@@ -34,20 +34,20 @@
 
 /* Author: Ioan Sucan */
 
-#ifndef OMPL_GEOMETRIC_PLANNERS_RRT_RRT_
-#define OMPL_GEOMETRIC_PLANNERS_RRT_RRT_
+#ifndef OMPL_CONTROL_PLANNERS_RGRRT_RGRRT_
+#define OMPL_CONTROL_PLANNERS_RGRRT_RGRRT_
 
-#include "ompl/geometric/planners/PlannerIncludes.h"
-#include "ompl/datastructures/NearestNeighbors.h"
+#include "ompl/control/planners/PlannerIncludes.h"
+#include "ompl/datastructures/NearestNeighborsLinear.h"
 
 namespace ompl
 {
 
-    namespace geometric
+    namespace control
     {
 
         /**
-           @anchor gRRT
+           @anchor cRRT
            @par Short description
            RRT is a tree-based motion planner that uses the following
            idea: RRT samples a random state @b qr in the state space,
@@ -55,37 +55,38 @@ namespace ompl
            that is closest to @b qr and expands from @b qc towards @b
            qr, until a state @b qm is reached. @b qm is then added to
            the exploration tree.
+           This implementation is intended for systems with differential constraints.
            @par External documentation
-           J. Kuffner and S.M. LaValle, RRT-connect: An efficient approach to single-query path planning, in <em>Proc. 2000 IEEE Intl. Conf. on Robotics and Automation</em>, pp. 995–1001, Apr. 2000. DOI: [10.1109/ROBOT.2000.844730](http://dx.doi.org/10.1109/ROBOT.2000.844730)<br>
-           [[PDF]](http://ieeexplore.ieee.org/ielx5/6794/18246/00844730.pdf?tp=&arnumber=844730&isnumber=18246)
+           S.M. LaValle and J.J. Kuffner, Randomized kinodynamic planning, <em>Intl. J. of Robotics Research</em>, vol. 20, pp. 378–400, May 2001. DOI: [10.1177/02783640122067453](http://dx.doi.org/10.1177/02783640122067453)<br>
+           [[PDF]](http://ijr.sagepub.com/content/20/5/378.full.pdf)
            [[more]](http://msl.cs.uiuc.edu/~lavalle/rrtpubs.html)
         */
 
-        /** \brief Rapidly-exploring Random Trees */
-        class RRT : public base::Planner
+        /** \brief Rapidly-exploring Random Tree */
+        class RGRRT : public base::Planner
         {
         public:
 
             /** \brief Constructor */
-            RRT(const base::SpaceInformationPtr &si);
+            RGRRT(const SpaceInformationPtr &si, const std::vector<Control*> controls);
 
-            virtual ~RRT();
+            virtual ~RGRRT();
 
-            virtual void getPlannerData(base::PlannerData &data) const;
-
+            /** \brief Continue solving for some amount of time. Return true if solution was found. */
             virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
 
+            /** \brief Clear datastructures. Call this function if the
+                input data to the planner has changed and you do not
+                want to continue planning */
             virtual void clear();
 
-            /** \brief Set the goal bias
-
-                In the process of randomly selecting states in
-                the state space to attempt to go towards, the
-                algorithm may in fact choose the actual goal state, if
-                it knows it, with some probability. This probability
-                is a real number between 0.0 and 1.0; its value should
-                usually be around 0.05 and should not be too large. It
-                is probably a good idea to use the default value. */
+            /** In the process of randomly selecting states in the state
+                space to attempt to go towards, the algorithm may in fact
+                choose the actual goal state, if it knows it, with some
+                probability. This probability is a real number between 0.0
+                and 1.0; its value should usually be around 0.05 and
+                should not be too large. It is probably a good idea to use
+                the default value. */
             void setGoalBias(double goalBias)
             {
                 goalBias_ = goalBias;
@@ -97,21 +98,19 @@ namespace ompl
                 return goalBias_;
             }
 
-            /** \brief Set the range the planner is supposed to use.
-
-                This parameter greatly influences the runtime of the
-                algorithm. It represents the maximum length of a
-                motion to be added in the tree of motions. */
-            void setRange(double distance)
+            /** \brief Return true if the intermediate states generated along motions are to be added to the tree itself */
+            bool getIntermediateStates() const
             {
-                maxDistance_ = distance;
+                return addIntermediateStates_;
             }
 
-            /** \brief Get the range the planner is using */
-            double getRange() const
+            /** \brief Specify whether the intermediate states generated along motions are to be added to the tree itself */
+            void setIntermediateStates(bool addIntermediateStates)
             {
-                return maxDistance_;
+                addIntermediateStates_ = addIntermediateStates;
             }
+
+            virtual void getPlannerData(base::PlannerData &data) const;
 
             /** \brief Set a different nearest neighbors datastructure */
             template<template<typename T> class NN>
@@ -133,12 +132,12 @@ namespace ompl
             {
             public:
 
-                Motion() : state(NULL), parent(NULL)
+                Motion() : state(NULL), control(NULL), steps(0), parent(NULL), r()
                 {
                 }
 
-                /** \brief Constructor that allocates memory for the state */
-                Motion(const base::SpaceInformationPtr &si) : state(si->allocState()), parent(NULL)
+                /** \brief Constructor that allocates memory for the state and the control */
+                Motion(const SpaceInformation *si) : state(si->allocState()), control(si->allocControl()), steps(0), parent(NULL), r()
                 {
                 }
 
@@ -149,9 +148,17 @@ namespace ompl
                 /** \brief The state contained by the motion */
                 base::State       *state;
 
+                /** \brief The control contained by the motion */
+                Control           *control;
+
+                /** \brief The number of steps the control is applied for */
+                unsigned int       steps;
+
                 /** \brief The parent motion in the exploration tree */
                 Motion            *parent;
 
+				/** \brief The reachable set from this state */
+				std::vector<base::State*>	  r;
             };
 
             /** \brief Free the memory allocated by this planner */
@@ -160,26 +167,43 @@ namespace ompl
             /** \brief Compute distance between motions (actually distance between contained states) */
             double distanceFunction(const Motion *a, const Motion *b) const
             {
-                return si_->distance(a->state, b->state);
+				double dist = si_->distance(a->state, b->state);
+				for (base::State *state : b->r) {
+					if (si_->distance(state, a->state) < dist) {
+						return dist;
+					}
+				}
+				double inf = std::numeric_limits<double>::infinity();
+                return inf;
             }
 
             /** \brief State sampler */
             base::StateSamplerPtr                          sampler_;
 
+            /** \brief Control sampler */
+            DirectedControlSamplerPtr                      controlSampler_;
+
+            /** \brief The base::SpaceInformation cast as control::SpaceInformation, for convenience */
+            const SpaceInformation                        *siC_;
+
             /** \brief A nearest-neighbors datastructure containing the tree of motions */
-            boost::shared_ptr< NearestNeighbors<Motion*> > nn_;
+            boost::shared_ptr< NearestNeighborsLinear<Motion*> > nn_;
 
             /** \brief The fraction of time the goal is picked as the state to expand towards (if such a state is available) */
             double                                         goalBias_;
 
-            /** \brief The maximum length of a motion to be added to a tree */
-            double                                         maxDistance_;
+            /** \brief Flag indicating whether intermediate states are added to the built tree of motions */
+            bool                                           addIntermediateStates_;
 
             /** \brief The random number generator */
             RNG                                            rng_;
 
             /** \brief The most recent goal motion.  Used for PlannerData computation */
             Motion                                         *lastGoalMotion_;
+
+
+			/** \brief The controls to use for computing the reachable set */
+			std::vector<Control*> 							controls;
         };
 
     }

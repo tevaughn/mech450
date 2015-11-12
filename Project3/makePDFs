@@ -1,0 +1,6 @@
+../../omplapp-1.0.0-Source/ompl/scripts/ompl_benchmark_statistics.py twisty.log -d twisty.db
+../../omplapp-1.0.0-Source/ompl/scripts/ompl_benchmark_statistics.py -d twisty.db -p twistyPlot.pdf
+
+../../omplapp-1.0.0-Source/ompl/scripts/ompl_benchmark_statistics.py cubicles.log -d cubicles.db
+../../omplapp-1.0.0-Source/ompl/scripts/ompl_benchmark_statistics.py -d cubicles.db -p cubiclesPlot.pdf
+
