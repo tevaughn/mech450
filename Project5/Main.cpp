@@ -67,35 +67,9 @@ int main(int, char **)
 	obstacles.push_back(obstacle);
 
 
-	int benchmarkOrPlan;
-	do 
-	{
-        std::cout << "Benchmark (1) or Plan (2) "<< std::endl;
-		std::cin >> benchmarkOrPlan;
+	std::cout << "Running in street like environment\n";
+	planWithSimpleSetupNeedle(obstacles, -10, 10, 1, 5, -5, -5, 5, 5);
 
-	} while (benchmarkOrPlan < 1 || benchmarkOrPlan > 2);
-
-	switch (benchmarkOrPlan) 
-	{
-		case BENCHMARK:
-			int benchmarkChoice;
-			do
-			{
-				std::cout << "Benchmark for: "<< std::endl;
-				std::cout << " (1) Pendulum" << std::endl;
-				std::cout << " (2) Car" << std::endl;
-				
-				std::cin >> benchmarkChoice;
-			} while (benchmarkChoice < 1 || benchmarkChoice > 2);
-	    
-			break;
-
-		case PLANNER:
-			std::cout << "Running in street like environment\n";
-			planWithSimpleSetupCar(obstacles, -10, 10, -10, 10, -5, -5, 5, 5, 1);
-			break;
-			
-	}
     return 0;
 }
 
