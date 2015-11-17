@@ -40,35 +40,37 @@
 #include "ompl/tools/config/SelfConfig.h"
 #include <limits>
 
-ompl::control::RGRRT::RGRRT(const SpaceInformationPtr &si, const std::vector<Control*> c) : base::Planner(si, "RGRRT")
+ompl::control::SMR::SMR(const SpaceInformationPtr &si, const std::vector<Control*> c, int n, int m) : base::Planner(si, "SMR")
 {
     specs_.approximateSolutions = true;
     siC_ = si.get();
     addIntermediateStates_ = false;
     lastGoalMotion_ = NULL;
 	controls = c;
+    n_ = n;
+    m_ = m;
 
     goalBias_ = 0.05;
 
-    Planner::declareParam<double>("goal_bias", this, &RGRRT::setGoalBias, &RGRRT::getGoalBias, "0.:.05:1.");
-    Planner::declareParam<bool>("intermediate_states", this, &RGRRT::setIntermediateStates, &RGRRT::getIntermediateStates);
+    Planner::declareParam<double>("goal_bias", this, &SMR::setGoalBias, &SMR::getGoalBias, "0.:.05:1.");
+    Planner::declareParam<bool>("intermediate_states", this, &SMR::setIntermediateStates, &SMR::getIntermediateStates);
 }
 
-ompl::control::RGRRT::~RGRRT()
+ompl::control::SMR::~SMR()
 {
     freeMemory();
 }
 
-void ompl::control::RGRRT::setup()
+void ompl::control::SMR::setup()
 {
     base::Planner::setup();
     if (!nn_) {
         nn_.reset(new NearestNeighborsLinear<Motion*>());
-    	nn_->setDistanceFunction(boost::bind(&RGRRT::distanceFunction, this, _1, _2));
+    	nn_->setDistanceFunction(boost::bind(&SMR::distanceFunction, this, _1, _2));
 	}
 }
 
-void ompl::control::RGRRT::clear()
+void ompl::control::SMR::clear()
 {
     Planner::clear();
     sampler_.reset();
@@ -79,7 +81,7 @@ void ompl::control::RGRRT::clear()
     lastGoalMotion_ = NULL;
 }
 
-void ompl::control::RGRRT::freeMemory()
+void ompl::control::SMR::freeMemory()
 {
     if (nn_)
     {
@@ -96,7 +98,7 @@ void ompl::control::RGRRT::freeMemory()
     }
 }
 
-ompl::base::PlannerStatus ompl::control::RGRRT::solve(const base::PlannerTerminationCondition &ptc)
+ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminationCondition &ptc)
 {
     checkValidity();
     base::Goal                   *goal = pdef_->getGoal().get();
@@ -132,7 +134,8 @@ ompl::base::PlannerStatus ompl::control::RGRRT::solve(const base::PlannerTermina
     Control       *rctrl = rmotion->control;
     base::State  *xstate = si_->allocState();
 
-	
+    std::vector<base::State *> sampledStates;// = std::vector::vector<base::State *>();
+	//std::map<base::State*, std::map<Control*, std::map<base::State*, double>>> tprobs;// = std::map::map<base::State, std::map<Control*, std::map<base::State, double>>>();
 
     while (ptc == false)
     {
@@ -152,6 +155,62 @@ ompl::base::PlannerStatus ompl::control::RGRRT::solve(const base::PlannerTermina
 				rmotion->r.push_back(addstate);
 			}
 		}
+
+        /* Learning phase */
+        for (int i = 0; i < n_; i++) {
+			base::State *addstate = si_->allocState();
+            sampler_->sampleUniform(addstate);
+            if (si_->getStateValidityChecker()->isValid(addstate)) {
+                sampledStates.push_back(addstate);
+            } else {
+                n_--;
+            }
+        }
+    
+        double total = 0;
+        for (base::State *state : sampledStates) {
+            for (Control *control : controls) {
+                for (int j = 0; j < m_; j++) {
+			        base::State *addstate = si_->allocState();
+                    siC_->propagate(state, control, 1, addstate);
+                    //if (tprobs[state][control][addstate] == NULL) {
+                      //  tprobs[state][control][addstate] = 0;
+                    //}
+                    tprobs[state][control][addstate] += 1;
+                    total += 1;
+                }
+            }
+        }
+
+        for (base::State *state : sampledStates) {
+            for (std::pair<Control*, std::map<base::State*, double>> control : tprobs[state]) {
+                for (std::pair<base::State*, double> otherState : control.second) {
+                    tprobs[state][control.first][otherState.first] = tprobs[state][control.first][otherState.first]/total;
+                    otherState.second /= total;
+                }
+            }
+        }
+
+
+        /* Query phase */
+        std::map<base::State*, double> v;
+        bool itsAMatch = false;
+        std::map<base::State*, Control*> pi;
+        while (!itsAMatch) {
+            itsAMatch = true;
+            computeOptimalPolicy(v, pi, goal);
+            std::map<base::State*, double> newV;
+            for (std::pair<base::State*, double> state : v) {
+                newV[state.first] = computeQ(v, state.first, pi[state.first], goal);
+                if (v[state.first] != newV[state.first]) {
+                    itsAMatch = false;
+                }
+            }
+            v = newV;
+        }
+                   
+
+
 
         /* find closest state in the tree */
         Motion *nmotion = nn_->nearest(rmotion);
@@ -279,7 +338,7 @@ ompl::base::PlannerStatus ompl::control::RGRRT::solve(const base::PlannerTermina
     return base::PlannerStatus(solved, approximate);
 }
 
-void ompl::control::RGRRT::getPlannerData(base::PlannerData &data) const
+void ompl::control::SMR::getPlannerData(base::PlannerData &data) const
 {
     Planner::getPlannerData(data);
 
@@ -309,3 +368,30 @@ void ompl::control::RGRRT::getPlannerData(base::PlannerData &data) const
             data.addStartVertex(base::PlannerDataVertex(m->state));
     }
 }
+
+void ompl::control::SMR::computeOptimalPolicy(std::map<base::State*, double> v, std::map<base::State*, Control*> pi, base::Goal *goal) {
+    for (std::pair<base::State*, double> state : v) {
+        double maxQ = std::numeric_limits<double>::infinity();
+        Control *bestAction = NULL;
+        for (Control *action : controls) {
+            double q = computeQ(v, state.first, action, goal);
+            if (q > maxQ) {
+                maxQ = q;
+                bestAction = action;
+            }
+        }
+        pi[state.first] = bestAction;
+    }
+}
+
+double ompl::control::SMR::computeQ(std::map<base::State*, double> v, base::State *state, Control *action, base::Goal *goal) {
+    double total = 0.0;
+    for (std::pair<base::State*, double> otherState : tprobs[state][action]) {
+        double reward = 0.0, dist = 0.0;
+        if (goal->isSatisfied(otherState.first, &dist)) {
+            reward = 1.0;
+        }
+        total += otherState.second*reward;
+    }
+    return total;
+} 

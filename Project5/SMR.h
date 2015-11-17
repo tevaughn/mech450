@@ -34,8 +34,8 @@
 
 /* Author: Ioan Sucan */
 
-#ifndef OMPL_CONTROL_PLANNERS_RGRRT_RGRRT_
-#define OMPL_CONTROL_PLANNERS_RGRRT_RGRRT_
+#ifndef OMPL_CONTROL_PLANNERS_SMR_SMR_
+#define OMPL_CONTROL_PLANNERS_SMR_SMR_
 
 #include "ompl/control/planners/PlannerIncludes.h"
 #include "ompl/datastructures/NearestNeighborsLinear.h"
@@ -63,14 +63,14 @@ namespace ompl
         */
 
         /** \brief Rapidly-exploring Random Tree */
-        class RGRRT : public base::Planner
+        class SMR : public base::Planner
         {
         public:
 
             /** \brief Constructor */
-            RGRRT(const SpaceInformationPtr &si, const std::vector<Control*> controls);
+            SMR(const SpaceInformationPtr &si, const std::vector<Control*> controls, int n, int m);
 
-            virtual ~RGRRT();
+            virtual ~SMR();
 
             /** \brief Continue solving for some amount of time. Return true if solution was found. */
             virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
@@ -120,9 +120,14 @@ namespace ompl
             }
 
             virtual void setup();
+    
+            virtual void computeOptimalPolicy(std::map<base::State*, double> v, std::map<base::State*, Control*> pi, base::Goal *goal);
+        
+            virtual double computeQ(std::map<base::State*, double> v, base::State *state, Control *action, base::Goal *goal);
 
         protected:
 
+            
 
             /** \brief Representation of a motion
 
@@ -204,6 +209,11 @@ namespace ompl
 
 			/** \brief The controls to use for computing the reachable set */
 			std::vector<Control*> 							controls;
+
+            std::map<base::State*, std::map<Control*, std::map<base::State*, double>>>                                                  tprobs;
+
+            int                                             n_, m_;
+        
         };
 
     }
