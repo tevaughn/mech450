@@ -1,4 +1,6 @@
 #include "Main.h"
+#include "SMR.h"
+
 #include <ompl/base/spaces/DiscreteStateSpace.h>
 #include <ompl/control/spaces/DiscreteControlSpace.h>
 
@@ -64,7 +66,7 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low
 
     space = pspace + dspace;
 
-    std::cout << "set space \n";
+
     std::cout << space->as<ompl::base::CompoundStateSpace>()->getDimension() << "\n";
 
  	// create a control space
@@ -83,7 +85,25 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low
     cspace->as<ompl::control::CompoundControlSpace>()->addSubspace(bspace);
 
 	std::vector<ompl::control::Control*> controls;	
-   std::cout << "set controls \n";
+
+	double interval = (rhigh - rlow)/5;
+	for (double low = rlow; low <= rhigh; low += interval) {
+
+        ompl::control::Control* rcontrol = cspace->allocControl();
+
+        rcontrol->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
+        rcontrol->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 0;
+
+        controls.push_back(rcontrol);
+
+		ompl::control::Control* lcontrol = cspace->allocControl();
+
+        lcontrol->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = low;
+        lcontrol->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = 1;
+
+        controls.push_back(lcontrol);
+	}
+
 	// Define a simple setup class
 	ompl::control::SimpleSetup ss(cspace);
 
@@ -93,7 +113,7 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low
 	// Set propagation routine
 	ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &NeedleODE));
 	ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &NeedlePostIntegration));
-   std::cout << "set ODE stuff \n";
+
 
     // Specify the start and goal states
     ompl::base::ScopedState<ompl::base::CompoundStateSpace> start(space);
@@ -117,8 +137,8 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low
 	ss.setup();
 
     // Specify a planning algorithm to use
-	//ompl::base::PlannerPtr planner(new ompl::control::RRT(ss.getSpaceInformation()));
-	//ss.setPlanner(planner);
+	ompl::base::PlannerPtr planner(new ompl::control::SMR(ss.getSpaceInformation(), controls, 10, 10));
+	ss.setPlanner(planner);
 
 
     // Attempt to solve the problem within the given time (seconds)
