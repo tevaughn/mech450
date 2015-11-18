@@ -180,7 +180,6 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 					    //if (std::find(sampledStates.begin(), sampledStates.end(), addstate) != sampledStates.end()) {
                             std::cout << "loop " << total <<"\n";
                             tprobs[state][control][addstate] += 1;
-                            total += 1;
                             //std::cout << "FOUND SAMPLED STATE\n";
                             foundState = true;
                             break;
@@ -200,7 +199,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
             for (std::pair<Control*, std::map<base::State*, double>> control : tprobs[state]) {
                 for (std::pair<base::State*, double> otherState : control.second) {
                     //tprobs[state][control.first][otherState.first] = tprobs[state][control.first][otherState.first]/total;
-                    otherState.second /= total;
+                    otherState.second /= m_;
                     std::cout << otherState.second << "\n";
                 }
             }
