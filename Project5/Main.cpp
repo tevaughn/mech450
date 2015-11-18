@@ -31,11 +31,13 @@ bool stateAlwaysValid(const ompl::base::State* /*state*/)
 
 int main(int, char **)
 {
+
 	// Empty environment
 	std::vector<Rectangle> none;
 
 	//Street environment
-    std::vector<Rectangle> obstacles;
+    std::vector<Rectangle> obstacles1;
+    
     Rectangle obstacle;
 
 	//1
@@ -43,32 +45,97 @@ int main(int, char **)
     obstacle.y = -10.0;
     obstacle.width = 20.0;
     obstacle.height = 4.0;
-    obstacles.push_back(obstacle);
+    obstacles1.push_back(obstacle);
 
 	//2
 	obstacle.x = -10;
 	obstacle.y = -4;
 	obstacle.width = 10;
 	obstacle.height = 8;
-	obstacles.push_back(obstacle);
+	obstacles1.push_back(obstacle);
 
 	//3
 	obstacle.x = 2;
 	obstacle.y = -4;
 	obstacle.width = 8;
 	obstacle.height = 8;
-	obstacles.push_back(obstacle);
+	obstacles1.push_back(obstacle);
 
 	//4
 	obstacle.x = -10;
 	obstacle.y = 6;
 	obstacle.width = 20;
 	obstacle.height = 2;
-	obstacles.push_back(obstacle);
+	obstacles1.push_back(obstacle);
+
+	//Block environment
+    std::vector<Rectangle> obstacles2;
+
+	//1
+    obstacle.x = -7.0;
+    obstacle.y = -2.0;
+    obstacle.width = 14.0;
+    obstacle.height = 4.0;
+    obstacles2.push_back(obstacle);
+
+    //Small obstacles environment
+    std::vector<Rectangle> obstacles3;
+
+	//1
+	obstacle.x = -8;
+	obstacle.y = -4;
+	obstacle.width = 2;
+	obstacle.height = 3;
+	obstacles3.push_back(obstacle);
+
+	//2
+	obstacle.x = 2;
+	obstacle.y = -2;
+	obstacle.width = 3;
+	obstacle.height = 3;
+	obstacles3.push_back(obstacle);
+
+	//3
+	obstacle.x = 7;
+	obstacle.y = 6;
+	obstacle.width = 3;
+	obstacle.height = 2;
+	obstacles3.push_back(obstacle);
+
+    int obstaclesNo;
+
+    do 
+	{
+        std::cout << "Plan with: "<< std::endl;
+        std::cout << " (1) no Obstacles" << std::endl;
+		std::cout << " (2) H-obstacles" << std::endl;
+        std::cout << " (3) Middle block" << std::endl;
+        std::cout << " (4) Many small obstacles" << std::endl;
 
 
-	std::cout << "Running in street like environment\n";
-	planWithSimpleSetupNeedle(obstacles, -10, 10, 1, 5, -5, -5, 5, 5);
+		std::cin >> obstaclesNo;
+
+	} while (obstaclesNo < 1 || obstaclesNo > 4);
+    
+    switch(obstaclesNo)
+    {
+        case 1:
+            std::cout << "Running in empty environment\n";
+	        planWithSimpleSetupNeedle(none, -10, 10, 1, 5, -5, -5, 5, 5);
+        break;
+        case 2:
+            std::cout << "Running in H environment\n";
+	        planWithSimpleSetupNeedle(obstacles1, -10, 10, 1, 5, -5, -5, 5, 5);
+            break;
+        case 3:
+            std::cout << "Running in BLOCK environment\n";
+	        planWithSimpleSetupNeedle(obstacles2, -10, 10, 1, 5, -5, -5, 5, 5);
+            break;
+        case 4:
+            std::cout << "Running in small obstacles environment\n";
+	        planWithSimpleSetupNeedle(obstacles3, -10, 10, 1, 5, -5, -5, 5, 5);
+        break;
+        }
 
     return 0;
 }
