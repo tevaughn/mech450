@@ -140,7 +140,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
     while (ptc == false)
     {
 
-
+		std::cout << "sample \n";
         /* sample random state (with goal biasing0) */
         if (goal_s && rng_.uniform01() < goalBias_ && goal_s->canSample())
             goal_s->sampleGoal(rstate);
@@ -148,15 +148,25 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
             sampler_->sampleUniform(rstate);
 		/* Creating reachable set */
 		for (Control *control : controls) {
+			
+			std::cout << "apply control \n";
 			base::State *addstate = si_->allocState();
-
+			
+			std::cout << "propagate \n";
 			siC_->propagate(rstate, control, 10, addstate);
+
+			std::cout << "propped \n";
 			if (si_->getStateValidityChecker()->isValid(addstate)) {
-				rmotion->r.push_back(addstate);
+				
+				std::cout << "if state is valid \n";
+				rmotion->r.push_back(addstate);				
+				std::cout << "added \n";
 			}
 		}
 
         /* Learning phase */
+
+		std::cout << "learn \n";
         for (int i = 0; i < n_; i++) {
 			base::State *addstate = si_->allocState();
             sampler_->sampleUniform(addstate);
