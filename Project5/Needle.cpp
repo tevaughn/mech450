@@ -110,7 +110,7 @@ void planWithSimpleSetupCar(const std::vector<Rectangle>& obstacles,  int low, i
 
     // Specify a planning algorithm to use
 
-	ompl::base::PlannerPtr planner(new ompl::control::RGRRT(ss.getSpaceInformation(), controls));
+	ompl::base::PlannerPtr planner(new ompl::control::SMR(ss.getSpaceInformation(), controls, 10 , 5));
 	ss.setPlanner(planner);
 
 

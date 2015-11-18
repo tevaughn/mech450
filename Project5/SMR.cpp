@@ -208,6 +208,9 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
             }
             v = newV;
         }
+
+
+        /* Simulate running the robot according to the policy. Record the path it actually travels */
                    
 
 
