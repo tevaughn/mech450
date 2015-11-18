@@ -162,15 +162,36 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
 			        addstate = si_->allocState();
 					std::cout << "propgate\n";
-                    siC_->propagate(state, control, 10, addstate);
-					if (std::find(sampledStates.begin(), sampledStates.end(), addstate) != sampledStates.end()) {
-                        std::cout << "loop " << total <<"\n";
-                        tprobs[state][control][addstate] += 1;
-                        total += 1;
-                    } else {
-                        //std::cout << "reached state wasn't sampled\n";
-                        //j--;
-                    }					
+
+                    siC_->propagate(state, control, 1, addstate);
+                
+                    bool foundState = false;
+                    for (base::State *checkstate :  sampledStates) {
+                        ompl::base::CompoundState *addc = addstate->as<ompl::base::CompoundState>();
+                        ompl::base::SE2StateSpace::StateType* addSE2 = addc->as<ompl::base::SE2StateSpace::StateType>(0);
+                        ompl::base::CompoundState *checkc = checkstate->as<ompl::base::CompoundState>();
+                        ompl::base::SE2StateSpace::StateType* checkSE2 = checkc->as<ompl::base::SE2StateSpace::StateType>(0);
+
+                        std::cout << checkSE2->getX() << " " << addSE2->getX() << " " << checkSE2->getY() << " " << addSE2->getY() << " " << checkSE2->getYaw() << " " << addSE2->getYaw() << "\n";
+                        if (abs(checkSE2->getX() - addSE2->getX()) < 2 && 
+                            abs(checkSE2->getY() - addSE2->getY()) < 2 && 
+                            abs(checkSE2->getYaw() - addSE2->getYaw()) < 2) {
+
+					    //if (std::find(sampledStates.begin(), sampledStates.end(), addstate) != sampledStates.end()) {
+                            std::cout << "loop " << total <<"\n";
+                            tprobs[state][control][addstate] += 1;
+                            total += 1;
+                            //std::cout << "FOUND SAMPLED STATE\n";
+                            foundState = true;
+                            break;
+                        } 
+                    }	
+
+                    if (!foundState) {
+                        std::cout << "reached state wasn't sampled\n";
+                        j--;
+                    }
+                    std::cout << "j: " << j << "\n";				
                 }
             }
         }
