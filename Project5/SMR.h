@@ -121,7 +121,7 @@ namespace ompl
 
             virtual void setup();
     
-            virtual void computeOptimalPolicy(std::map<base::State*, double> v, std::map<base::State*, Control*> pi, base::Goal *goal);
+            virtual void computeOptimalPolicy(std::map<base::State*, double> v, std::map<base::State*, Control*> *pi, base::Goal *goal);
         
             virtual double computeQ(std::map<base::State*, double> v, base::State *state, Control *action, base::Goal *goal);
 
