@@ -1,1 +1,1 @@
-sed 's/\t/    /g' *.{cpp,h}
+sed -i 's/\t/    /g' *.{cpp,h}
