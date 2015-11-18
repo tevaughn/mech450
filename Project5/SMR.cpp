@@ -282,6 +282,9 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
             {
                 approxdif = dist;
             }
+
+            curstate = nextstate;
+            // need to adjust curstate to reflect actual sampled state given tolerance
         }
 
         PathControl *path = new PathControl(si_);
