@@ -144,7 +144,8 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
 		std::cout << "learn \n";
 		base::State *addstate;
-        for (int i = 0; i < n_; i++) {
+        sampledStates.push_back(rmotion->state);
+        for (int i = 1; i < n_; i++) {
 			addstate = si_->allocState();
             sampler_->sampleUniform(addstate);
             if (si_->getStateValidityChecker()->isValid(addstate)) {
@@ -162,14 +163,15 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 					std::cout << m_ << " " << n_ << "\n";
 			        addstate = si_->allocState();
 					std::cout << "propgate\n";
-                    siC_->propagate(state, control, 1, addstate);
-					
-                    //if (tprobs[state][control][addstate] == NULL) {
-                      //  tprobs[state][control][addstate] = 0;
-                    //}
-					std::cout << "loop " << total <<"\n";
-                    tprobs[state][control][addstate] += 1;
-                    total += 1;
+                    siC_->propagate(state, control, 10, addstate);
+					if (std::find(sampledStates.begin(), sampledStates.end(), addstate) != sampledStates.end()) {
+                        std::cout << "loop " << total <<"\n";
+                        tprobs[state][control][addstate] += 1;
+                        total += 1;
+                    } else {
+                        //std::cout << "reached state wasn't sampled\n";
+                        //j--;
+                    }					
                 }
             }
         }
@@ -179,9 +181,12 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
                 for (std::pair<base::State*, double> otherState : control.second) {
                     //tprobs[state][control.first][otherState.first] = tprobs[state][control.first][otherState.first]/total;
                     otherState.second /= total;
+                    std::cout << otherState.second << "\n";
                 }
             }
         }
+
+
 
 
         /* Query phase */	
@@ -189,12 +194,21 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
         std::map<base::State*, double> v;
         bool itsAMatch = false;
         std::map<base::State*, Control*> pi;
+
+        for (base::State *state: sampledStates) {
+            v[state] = 0.0;
+            pi[state] = NULL;
+        }
+
         while (!itsAMatch) {
             itsAMatch = true;
             computeOptimalPolicy(v, pi, goal);
+            std::cout << "policy\n";
             std::map<base::State*, double> newV;
             for (std::pair<base::State*, double> state : v) {
+                std::cout << "state: " << state.first << "\n";
                 newV[state.first] = computeQ(v, state.first, pi[state.first], goal);
+                std::cout << "q\n";
                 if (v[state.first] != newV[state.first]) {
                     itsAMatch = false;
                 }
@@ -202,10 +216,60 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
             v = newV;
         }
 
-
+        std::cout << "simulate\n";
         /* Simulate running the robot according to the policy. Record the path it actually travels */
+        bool finished = false;
+        base::State *curstate;
+        base::State *nextstate = si_->allocState();
+        double dist = 0.0;
+        std::vector<Motion*> mpath;
+        Motion *lastmotion;
+        bool solved = false;
+
+        for (std::pair<base::State*, Control*> s : pi) {
+            std::cout << s.first << " " << s.second << "\n";
+        }
+
+        while (!finished) {
+            std::cout << "not finished\n";
+            curstate = rmotion->state;
+            std::cout << curstate << "\n";
+            Control *ctrl = pi[curstate];
+            std::cout << ctrl << "\n";
+            siC_->propagate(curstate, ctrl, 1, nextstate);
+            std::cout << "propagated\n";
+            /* create a motion */
+            Motion *motion = new Motion(siC_);
+            si_->copyState(motion->state, curstate);
+            siC_->copyControl(motion->control, rctrl);
+            motion->steps = 1;
+            motion->parent = lastmotion;
+            nn_->add(motion);
+            mpath.push_back(motion);
+            lastmotion = motion;
+
+            std::cout << "check solved\n";
+            solved = goal->isSatisfied(nextstate, &dist);
+            if (solved) {
+                finished = true;
+                approxdif = dist;
+                break;
+            }
+            if (dist < approxdif)
+            {
+                approxdif = dist;
+            }
+        }
+
+        PathControl *path = new PathControl(si_);
+        for (int i = 0; i < mpath.size() ; i++)
+            if (mpath[i]->parent)
+                path->append(mpath[i]->state, mpath[i]->control, mpath[i]->steps * siC_->getPropagationStepSize());
+            else
+                path->append(mpath[i]->state);
+        pdef_->addSolutionPath(base::PathPtr(path), false, approxdif, getName());
                    
-		return base::PlannerStatus(false, false);
+		return base::PlannerStatus(solved, false);
     }
 
     bool solved = false;
@@ -284,7 +348,8 @@ void ompl::control::SMR::getPlannerData(base::PlannerData &data) const
 
 void ompl::control::SMR::computeOptimalPolicy(std::map<base::State*, double> v, std::map<base::State*, Control*> pi, base::Goal *goal) {
     for (std::pair<base::State*, double> state : v) {
-        double maxQ = std::numeric_limits<double>::infinity();
+        double maxQ = -std::numeric_limits<double>::infinity();
+        std::cout << maxQ << "\n";
         Control *bestAction = NULL;
         for (Control *action : controls) {
             double q = computeQ(v, state.first, action, goal);
