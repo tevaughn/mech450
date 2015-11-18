@@ -1,6 +1,7 @@
 #include "Main.h"
 #include <ompl/base/spaces/DiscreteStateSpace.h>
 #include <ompl/control/spaces/DiscreteControlSpace.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
 
 #define RIGHT 1
 #define LEFT 1
@@ -14,6 +15,7 @@ void NeedleODE (const ompl::control::ODESolver::StateType& q, const ompl::contro
     const double theta = q[2];
     double w = 1/r;
 
+
     if (b == LEFT) {
         w = -w;
     }
@@ -24,6 +26,7 @@ void NeedleODE (const ompl::control::ODESolver::StateType& q, const ompl::contro
 	qdot[0] = cos(theta);
 	qdot[1] = sin(theta);
 	qdot[2] = w;
+    std::cout << q.size();
     qdot[3] = b - q[3];
 
 }
@@ -33,8 +36,47 @@ void NeedlePostIntegration (const ompl::base::State* /*state*/, const ompl::cont
  {
  	// Normalize orientation between 0 and 2*pi
  	ompl::base::SO2StateSpace SO2;
-	SO2.enforceBounds (result->as<ompl::base::SE2StateSpace::StateType>()->as<ompl::base::SO2StateSpace::StateType>(1));
+	//SO2.enforceBounds (result->as<ompl::base::SE2StateSpace::StateType>()->as<ompl::base::SO2StateSpace::StateType>(1));
 }
+
+void propagate(const ompl::base::State *start, const ompl::control::Control *control, const double duration, ompl::base::State *result)
+{
+    const ompl::base::CompoundState *state = start->as<ompl::base::CompoundState>();
+    const ompl::base::SE2StateSpace::StateType* se2 = state->as<ompl::base::SE2StateSpace::StateType>(0);
+    const ompl::base::DiscreteStateSpace::StateType* d = state->as<ompl::base::DiscreteStateSpace::StateType>(1);
+    
+    const ompl::control::RealVectorControlSpace::ControlType* rctrl = control->as<ompl::control::RealVectorControlSpace::ControlType>();
+    std::cout << "prop \n";
+    const double r = rctrl->values[0];
+    const double b = rctrl->values[1];
+    
+    double theta = se2->getYaw();
+    double w = 1/r;
+
+
+    if (b == LEFT) {
+        w = -w;
+    }
+
+    double xout = se2->getX() + duration*cos(theta);
+    double yout = se2->getY() + duration*sin(theta);
+    double yawout = se2->getYaw() + duration*w;
+    double bout = b;
+    std::cout << "set \n";
+    ompl::base::CompoundStateSpace::StateType* out = result->as<ompl::base::CompoundStateSpace::StateType>();
+    ompl::base::SE2StateSpace::StateType* se2out = out->as<ompl::base::SE2StateSpace::StateType>(0);
+    se2out->setXY(xout, yout);
+    se2out->setYaw(yawout);
+
+    ompl::base::SO2StateSpace::StateType* so2out = se2out->as<ompl::base::SO2StateSpace::StateType>(1);
+    ompl::base::SO2StateSpace SO2;
+    SO2.enforceBounds (so2out);
+    std::cout << "bound \n";
+    ompl::base::DiscreteStateSpace::StateType* dout = out->as<ompl::base::DiscreteStateSpace::StateType>(1);
+    dout->value = b;
+    std::cout << "done \n";
+}
+ 
 
 bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state, const std::vector<Rectangle>& obstacles)
 {
@@ -49,20 +91,28 @@ bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::S
 void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low, int high, int rlow, int rhigh, double startX, double startY, double goalX, double goalY)
 {
     // Create the state (configuration) space for your system
-    ompl::base::StateSpacePtr space(new ompl::base::CompoundStateSpace());
+    //ompl::base::StateSpacePtr space(new ompl::base::CompoundStateSpace());
     ompl::base::StateSpacePtr pspace(new ompl::base::SE2StateSpace());
     ompl::base::StateSpacePtr dspace(new ompl::base::DiscreteStateSpace(0,1));
-
+    //ompl::base::StateSpacePtr dspace(new ompl::base::RealVectorStateSpace(1));
 
     // Set bounds
     ompl::base::RealVectorBounds bounds(2);
     bounds.setLow(low);
     bounds.setHigh(high);
 
+
     // Cast the r2 pointer to the derived type, then set the bounds
     pspace->as<ompl::base::SE2StateSpace>()->setBounds(bounds);
 
-    space = pspace + dspace;
+    //ompl::base::RealVectorBounds dbounds(1);
+
+    //dspace->as<ompl::base::DiscreteStateSpace>()->setBounds(0,1);
+    //dbounds.setHigh(1);
+
+    //dspace->as<ompl::base::RealVectorStateSpace>()->setBounds(dbounds);
+
+    ompl::base::StateSpacePtr space = pspace + dspace;
 
     std::cout << "set space \n";
     std::cout << space->as<ompl::base::CompoundStateSpace>()->getDimension() << "\n";
@@ -91,9 +141,10 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low
 	ss.setStateValidityChecker(boost::bind(&isStateValid, ss.getSpaceInformation().get(), _1, obstacles));
 
 	// Set propagation routine
-	ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &NeedleODE));
-	ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &NeedlePostIntegration));
-   std::cout << "set ODE stuff \n";
+	//ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &NeedleODE));
+	ss.setStatePropagator(boost::bind(&propagate, _1, _2, _3, _4));
+//(ompl::control::ODESolver::getStatePropagator(&NeedleODE, &NeedlePostIntegration));
+    std::cout << "set ODE stuff \n";
 
     // Specify the start and goal states
     ompl::base::ScopedState<ompl::base::CompoundStateSpace> start(space);
