@@ -190,7 +190,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
                         std::cout << "reached state wasn't sampled\n";
                         j--;
                     }
-                    std::cout << "j: " << j << "\n";				
+                    //std::cout << "j: " << j << "\n";				
                 }
             }
         }

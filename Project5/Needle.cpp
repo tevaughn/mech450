@@ -11,11 +11,14 @@ void propagate(const ompl::base::State *start, const ompl::control::Control *con
 {
     const ompl::base::CompoundState *state = start->as<ompl::base::CompoundState>();
     const ompl::base::SE2StateSpace::StateType* se2 = state->as<ompl::base::SE2StateSpace::StateType>(0);
-    const ompl::base::DiscreteStateSpace::StateType* d = state->as<ompl::base::DiscreteStateSpace::StateType>(1);
+    //const ompl::base::DiscreteStateSpace::StateType* d = state->as<ompl::base::DiscreteStateSpace::StateType>(1);
     
     const ompl::control::RealVectorControlSpace::ControlType* rctrl = control->as<ompl::control::RealVectorControlSpace::ControlType>();
 
-    const double r = rctrl->values[0];
+	// +- 10% uncertainty
+	const double uncertainty = (rand()%10 + 95)/100.0; 
+	
+    const double r = rctrl->values[0] * uncertainty;
     const double b = rctrl->values[1];
     
     double theta = se2->getYaw();
@@ -26,9 +29,9 @@ void propagate(const ompl::base::State *start, const ompl::control::Control *con
         w = -w;
     }
 
-    double xout = se2->getX() + duration*cos(theta);
-    double yout = se2->getY() + duration*sin(theta);
-    double yawout = se2->getYaw() + duration*w;
+    double xout = (se2->getX() + duration*cos(theta));
+    double yout = (se2->getY() + duration*sin(theta));
+    double yawout = (se2->getYaw() + duration*w);
     double bout = b;
 
     ompl::base::CompoundStateSpace::StateType* out = result->as<ompl::base::CompoundStateSpace::StateType>();
@@ -41,7 +44,7 @@ void propagate(const ompl::base::State *start, const ompl::control::Control *con
     SO2.enforceBounds (so2out);
 
     ompl::base::DiscreteStateSpace::StateType* dout = out->as<ompl::base::DiscreteStateSpace::StateType>(1);
-    dout->value = b;
+    dout->value = bout;
 }
  
 
