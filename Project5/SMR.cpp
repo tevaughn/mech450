@@ -199,9 +199,13 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
             pi[state] = NULL;
         }
 
+        for (std::pair<base::State*, Control*> s : pi) {
+            std::cout << s.first << " " << s.second << "\n";
+        }
+
         while (!itsAMatch) {
             itsAMatch = true;
-            computeOptimalPolicy(v, pi, goal);
+            computeOptimalPolicy(v, &pi, goal);
             std::cout << "policy\n";
             std::map<base::State*, double> newV;
             for (std::pair<base::State*, double> state : v) {
@@ -345,11 +349,12 @@ void ompl::control::SMR::getPlannerData(base::PlannerData &data) const
     }
 }
 
-void ompl::control::SMR::computeOptimalPolicy(std::map<base::State*, double> v, std::map<base::State*, Control*> pi, base::Goal *goal) {
+void ompl::control::SMR::computeOptimalPolicy(std::map<base::State*, double> v, std::map<base::State*, Control*> *pi, base::Goal *goal) {
+
     for (std::pair<base::State*, double> state : v) {
         double maxQ = -std::numeric_limits<double>::infinity();
         std::cout << maxQ << "\n";
-        Control *bestAction = NULL;
+        Control *bestAction;
         for (Control *action : controls) {
             double q = computeQ(v, state.first, action, goal);
             if (q > maxQ) {
@@ -357,7 +362,12 @@ void ompl::control::SMR::computeOptimalPolicy(std::map<base::State*, double> v, 
                 bestAction = action;
             }
         }
-        pi[state.first] = bestAction;
+        (*pi)[state.first] = bestAction;
+        std::cout << "set pi: " << state.first << " " << (*pi)[state.first] << " " << bestAction << "\n";
+
+        for (std::pair<base::State*, Control*> s : *pi) {
+            std::cout << s.first << " " << s.second << "\n";
+        }
     }
 }
 
