@@ -29,7 +29,7 @@ void NeedleODE (const ompl::control::ODESolver::StateType& q, const ompl::contro
     }
 
 
-	std::cout << "solve ODE \n";
+	//std::cout << "solve ODE \n";
 
 	// Zero out qdot
 	qdot.resize (q.size(), 0);
@@ -41,7 +41,6 @@ void NeedleODE (const ompl::control::ODESolver::StateType& q, const ompl::contro
 
 
 	std::cout << "solved \n";
-
 }
 
 // This is a callback method invoked after numerical integration.
