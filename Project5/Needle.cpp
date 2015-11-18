@@ -8,25 +8,25 @@
 #define LEFT 1
 
 void NeedleODE (const ompl::control::ODESolver::StateType& q, const ompl::control::Control* control, ompl::control::ODESolver::StateType& qdot) {
-	std::cout << "ODE \n";
+	//std::cout << "ODE \n";
 	const double *u = control->as<ompl::control::RealVectorControlSpace::ControlType>()->values;	
 
-    double r = u[0];
+    const double r = u[0];
     const double b = u[1];
 
    // adjust r by the uncertainty
 //	if (uncertainty > 0) {
 //		// Find int between (100-uncertainty) and (100+uncertainty)
-//		double rand = ((rand()%(2*uncertainty)) + 100 - uncertainty)*0.01;
+//		double rand = ((rand()%(2*uncertainty)) + 100 - uncertainty)*0.01;	
 //		r = r*rand;
 //	}
 
     const double theta = q[2];
-    double w = 1/r;
+    const double w = 1/r;
 
-    if (b == LEFT) {
-        w = -w;
-    }
+   // if (b == LEFT) {
+   //     w = -w;
+   // }
 
 
 	//std::cout << "solve ODE \n";
@@ -37,10 +37,9 @@ void NeedleODE (const ompl::control::ODESolver::StateType& q, const ompl::contro
 	qdot[0] = cos(theta);
 	qdot[1] = sin(theta);
 	qdot[2] = w;
-    qdot[3] = b - q[3];
+    //qdot[3] = b - q[3];
 
-
-	std::cout << "solved \n";
+	//std::cout << b << " " << q[2] << " " << q[3] << " solved \n";
 }
 
 // This is a callback method invoked after numerical integration.
@@ -48,8 +47,8 @@ void NeedlePostIntegration (const ompl::base::State* /*state*/, const ompl::cont
  {
  	// Normalize orientation between 0 and 2*pi
 	std::cout << "normalize \n";
- 	ompl::base::SO2StateSpace SO2;
-	SO2.enforceBounds (result->as<ompl::base::SE2StateSpace::StateType>()->as<ompl::base::SO2StateSpace::StateType>(1));
+ 	//ompl::base::SO2StateSpace SO2;
+	//SO2.enforceBounds (result->as<ompl::base::SE2StateSpace::StateType>()->as<ompl::base::SO2StateSpace::StateType>(1));
 }
 
 bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::State *state, const std::vector<Rectangle>& obstacles)
@@ -131,7 +130,7 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low
     start->as<ompl::base::SE2StateSpace::StateType>(0)->setX(startX);
     start->as<ompl::base::SE2StateSpace::StateType>(0)->setY(startY);
     start->as<ompl::base::SE2StateSpace::StateType>(0)->setYaw(0.0);
-    start->as<ompl::base::DiscreteStateSpace::StateType>(1)->value = 0;
+    //start->as<ompl::base::DiscreteStateSpace::StateType>(1)->value(0) = 0;
 
 
 
@@ -140,7 +139,7 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low
     goal->as<ompl::base::SE2StateSpace::StateType>(0)->setX(goalX);
     goal->as<ompl::base::SE2StateSpace::StateType>(0)->setY(goalY);
     goal->as<ompl::base::SE2StateSpace::StateType>(0)->setYaw(0.0);
-    goal->as<ompl::base::DiscreteStateSpace::StateType>(1)->value = 0;
+    //goal->as<ompl::base::DiscreteStateSpace::StateType>(1)->value = 0;
 
     // set the start and goal states
     ss.setStartAndGoalStates(start, goal);

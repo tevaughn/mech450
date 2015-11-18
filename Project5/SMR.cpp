@@ -143,8 +143,9 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 	    /* Learning phase */
 
 		std::cout << "learn \n";
+		base::State *addstate;
         for (int i = 0; i < n_; i++) {
-			base::State *addstate = si_->allocState();
+			addstate = si_->allocState();
             sampler_->sampleUniform(addstate);
             if (si_->getStateValidityChecker()->isValid(addstate)) {
                 sampledStates.push_back(addstate);
@@ -152,10 +153,9 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
                 i--;
             }
         }
+
     	std::cout << "learn MORE \n";
         double total = 0;
-		base::State *addstate;
-
         for (base::State *state : sampledStates) {
             for (Control *control : controls) {
                 for (int j = 0; j < m_; j++) {
@@ -173,7 +173,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
                 }
             }
         }
-		std::cout << "normalie or something \n";
+		std::cout << "normalize or something \n";
         for (base::State *state : sampledStates) {
             for (std::pair<Control*, std::map<base::State*, double>> control : tprobs[state]) {
                 for (std::pair<base::State*, double> otherState : control.second) {
@@ -205,7 +205,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
         /* Simulate running the robot according to the policy. Record the path it actually travels */
                    
-
+		return base::PlannerStatus(false, false);
     }
 
     bool solved = false;
