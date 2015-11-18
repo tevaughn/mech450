@@ -142,7 +142,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
 	    /* Learning phase */
 
-		std::cout << "learn \n";
+
 		base::State *addstate;
         sampledStates.push_back(rmotion->state);
         for (int i = 1; i < n_; i++) {
@@ -155,12 +155,11 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
             }
         }
 
-    	std::cout << "learn MORE \n";
         double total = 0;
         for (base::State *state : sampledStates) {
             for (Control *control : controls) {
                 for (int j = 0; j < m_; j++) {
-					std::cout << m_ << " " << n_ << "\n";
+
 			        addstate = si_->allocState();
 					std::cout << "propgate\n";
                     siC_->propagate(state, control, 10, addstate);
@@ -175,7 +174,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
                 }
             }
         }
-		std::cout << "normalize or something \n";
+
         for (base::State *state : sampledStates) {
             for (std::pair<Control*, std::map<base::State*, double>> control : tprobs[state]) {
                 for (std::pair<base::State*, double> otherState : control.second) {
@@ -190,7 +189,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
 
         /* Query phase */	
-		std::cout << "Query \n";
+
         std::map<base::State*, double> v;
         bool itsAMatch = false;
         std::map<base::State*, Control*> pi;
