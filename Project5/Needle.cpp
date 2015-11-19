@@ -144,7 +144,7 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low
     // Specify a planning algorithm to use
 
 
-	ompl::base::PlannerPtr planner(new ompl::control::SMR(ss.getSpaceInformation(), controls, 1000, 3));
+	ompl::base::PlannerPtr planner(new ompl::control::SMR(ss.getSpaceInformation(), controls, 1000, 5));
 
 	ss.setPlanner(planner);
 

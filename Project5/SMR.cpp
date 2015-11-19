@@ -180,7 +180,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
                             std::abs(checkSE2->getYaw() - addSE2->getYaw()) < 2) {
 
 
-                            tprobs[state][control][addstate] += 1;
+                            tprobs[state][control][checkstate] += 1;
                             foundState = true;
                             break;
                         } 
@@ -196,8 +196,9 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
         for (base::State *state : sampledStates) {
             for (std::pair<Control*, std::map<base::State*, double>> control : tprobs[state]) {
                 for (std::pair<base::State*, double> otherState : control.second) {
-                    otherState.second /= m_;
-                    //std::cout << otherState.second << "\n";
+                    std::cout << tprobs[state][control.first][otherState.first] << "\n";
+                    tprobs[state][control.first][otherState.first] /= m_;
+                    std::cout << tprobs[state][control.first][otherState.first] << "\n";
                 }
             }
         }
@@ -207,14 +208,104 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
         /* Query phase */	
 
+        ompl::base::State *goals = (goal->as<ompl::base::GoalState>())->getState();
+        ompl::base::CompoundStateSpace::StateType *goalc = goals->as<ompl::base::CompoundStateSpace::StateType>();
+        ompl::base::SE2StateSpace::StateType* goalSE2 = goalc->as<ompl::base::SE2StateSpace::StateType>(0);
+
+        std::map<base::State*, double> v;
+        bool itsAMatch = false;
         std::map<base::State*, Control*> pi;
 
         for (base::State *state: sampledStates) {
+            v[state] = 0.0;
             pi[state] = NULL;
+            std::cout << state << "\n";
+        }
+
+        for (std::pair<base::State*, Control*> s : pi) {
+            std::cout << s.first << " " << s.second << "\n";
+        }
+
+        while (!itsAMatch) {
+            itsAMatch = true;
+            //computeOptimalPolicy(v, &pi, goal);
+            std::cout << "policy\n";
+            std::map<base::State*, double> newV;
+            // for (std::pair<base::State*, double> state : v) {
+            //     std::cout << "state: " << state.first << "\n";
+            //     newV[state.first] = computeQ(v, state.first, pi[state.first], goal);
+            //     std::cout << "q\n";
+            //     if (v[state.first] != newV[state.first]) {
+            //         itsAMatch = false;
+            //     }
+            // }
+            // v = newV;
+
+            std::cout << v.size() << "\n";
+            for (base::State *state: sampledStates) {
+                std::cout << state << "\n";
+                double q = 0.0;
+                double maxQ = -std::numeric_limits<double>::infinity();
+                Control *bestAction;
+                for (auto action : tprobs[state]) {
+                    for (auto nextstate: tprobs[state][action.first]) {
+                        std::cout << "q " << nextstate.first << "\n";
+                        //std::cout << "p=" << nextstate.second << " v=" << v[nextstate.first] << " product=" << nextstate.second*v[nextstate.first] << "\n";
+                        //std::cout << (std::find(v.begin(), v.end(), nextstate) == v.end()) << "\n";
+                        if (v[nextstate.first] > 0 ) {//[nextstate.first] > 0) {
+                            std::cout << "p=" << nextstate.second << " v=" << v[nextstate.first] << " product=" << nextstate.second*v[nextstate.first] << "\n"; 
+                        }
+                        q += (nextstate.second * v[nextstate.first]);
+                    }
+                    if (q > maxQ) {
+                        maxQ = q;
+                        bestAction = action.first;
+                    }
+                }
+                //std::cout << "max q: " << maxQ << "\n";
+                double reward = 0.0;
+
+                ompl::base::CompoundState *statec = state->as<ompl::base::CompoundState>();
+                ompl::base::SE2StateSpace::StateType* stateSE2 = statec->as<ompl::base::SE2StateSpace::StateType>(0);
+            
+                //std::cout << stateSE2->getX() << " " << goalSE2->getX() << " " << stateSE2->getY() << " " << goalSE2->getY() << " " << stateSE2->getYaw() << " " << goalSE2->getYaw() << "\n";
+                if (std::abs(stateSE2->getX() - goalSE2->getX()) < 5 && 
+                    std::abs(stateSE2->getY() - goalSE2->getY()) < 5 && 
+                    std::abs(stateSE2->getYaw() - goalSE2->getYaw()) < 5) {
+                    //std::cout << "GOAL STATE\n";
+                    reward = 1.0;
+                    std::cout << reward + maxQ << "\n";
+                }
+
+                newV[state] = reward + maxQ;
+                if (newV[state] > 0) {
+                    //std::cout << "newv " << newV[state] << "\n"; 
+                }
+                pi[state] = bestAction;
+                if (v[state] != newV[state]) {
+                    itsAMatch = false;
+                }
+                //std::cout << v[state] << " " << newV[state] << "\n";
+               
+
+            }  
+            v = newV;
+            std::cout << "pi done " << itsAMatch << "\n";
         }
 
 
-        computeOptimalPolicy(&pi, goal);
+
+
+
+
+        // std::map<base::State*, Control*> pi;
+
+        // for (base::State *state: sampledStates) {
+        //     pi[state] = NULL;
+        // }
+
+
+        // computeOptimalPolicy(&pi, goal);
 
 
         /* Simulate running the robot according to the policy. Record the path it actually travels */
@@ -227,6 +318,10 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
         Motion *lastmotion;
         bool solved = false;
 
+        std::cout << "V\n";
+        for (auto state: sampledStates) {
+            std::cout << v[state] << "\n";
+        }
 		
         curstate = rmotion->state;
 		approxstate = curstate;
