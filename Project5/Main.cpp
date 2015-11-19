@@ -197,7 +197,7 @@ int main(int, char **)
 		break;
     	case 2: uncertainty = 3;
 		break;
-    	case 3: uncertainty = 5;
+    	case 3: uncertainty = 50;
 		break;
     	case 4: uncertainty = 10;
 		break;
