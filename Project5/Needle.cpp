@@ -4,7 +4,7 @@
 #include <ompl/base/spaces/DiscreteStateSpace.h>
 #include <ompl/control/spaces/DiscreteControlSpace.h>
 
-#define RIGHT 1
+#define RIGHT 0
 #define LEFT 1
 
 void propagate(const ompl::base::State *start, const ompl::control::Control *control, const double duration, ompl::base::State *result)
