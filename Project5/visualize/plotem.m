@@ -12,6 +12,7 @@ function plotem
 close all
 
 A = dlmread('../path.txt');
+
 % A is now:
 % [ x y theta rotated ];
 % we ignore theta when printing
@@ -21,8 +22,7 @@ hold on
 
 wh = 1;
 
-
-yo  =  1
+yo  =  0
 
 %axis([-10 10 -10 10]);
 

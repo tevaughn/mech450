@@ -21,7 +21,7 @@ void propagate(const ompl::base::State *start, const ompl::control::Control *con
     const double b = rctrl->values[1];
     
     double theta = se2->getYaw();
-    double w = duration*0.01/r;
+    double w = duration/r;
 
 
     if (b == LEFT) {
