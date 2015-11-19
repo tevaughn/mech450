@@ -20,17 +20,20 @@
 #include <valarray>
 #include <limits>
 
-
+#define percent0 1
+#define percent3 2
+#define percent4 3
+#define percent10 4
 
 // The collision checker produced in project 2
 #include "CollisionChecking.h"
 
 
-void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low, int high, int rlow, int rhigh, double startX, double startY, double goalX, double goalY);
+void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles, int uncertainty, int low, int high, int rlow, int rhigh, double startX, double startY, double goalX, double goalY);
 
-void NeedleODE (const ompl::control::ODESolver::StateType& q, const ompl::control::Control* control, ompl::control::ODESolver::StateType& qdot);
+//void NeedleODE (const ompl::control::ODESolver::StateType& q, const ompl::control::Control* control, ompl::control::ODESolver::StateType& qdot);
 
-void NeedlePostIntegration (const ompl::base::State* /*state*/, const ompl::control::Control* /*control*/, const double /*duration*/, ompl::base::State *result);
+//void NeedlePostIntegration (const ompl::base::State* /*state*/, const ompl::control::Control* /*control*/, const double /*duration*/, ompl::base::State *result);
 
 ompl::base::ValidStateSamplerPtr allocUniformStateSampler(const ompl::base::SpaceInformation *si);
 

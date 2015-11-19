@@ -7,7 +7,7 @@
 #define RIGHT 0
 #define LEFT 1
 
-void propagate(const ompl::base::State *start, const ompl::control::Control *control, const double duration, ompl::base::State *result)
+void propagate(const ompl::base::State *start, const ompl::control::Control *control, const double duration, ompl::base::State *result, int uncertaintyRange)
 {
     const ompl::base::CompoundState *state = start->as<ompl::base::CompoundState>();
     const ompl::base::SE2StateSpace::StateType* se2 = state->as<ompl::base::SE2StateSpace::StateType>(0);
@@ -16,7 +16,7 @@ void propagate(const ompl::base::State *start, const ompl::control::Control *con
     const ompl::control::RealVectorControlSpace::ControlType* rctrl = control->as<ompl::control::RealVectorControlSpace::ControlType>();
 
 	// +- 10% uncertainty
-	const double uncertainty = (rand()%10 + 95)/100.0; 
+	const double uncertainty = (rand()%(uncertaintyRange*2) + (100 - uncertaintyRange))/100.0; 
 	
     const double r = rctrl->values[0] * uncertainty;
     const double b = rctrl->values[1];
@@ -57,7 +57,7 @@ bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::S
 	return si->satisfiesBounds(state) && isValidStatePoint(pos, obstacles);
 }
 
-void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low, int high, int rlow, int rhigh, double startX, double startY, double goalX, double goalY)
+void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles, int uncertainty,  int low, int high, int rlow, int rhigh, double startX, double startY, double goalX, double goalY)
 {
     // Create the state (configuration) space for your system
     ompl::base::StateSpacePtr space(new ompl::base::CompoundStateSpace());
@@ -117,7 +117,7 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles,  int low
 	// Set propagation routine
 	//ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &NeedleODE));
 	//ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &NeedlePostIntegration));
-    ss.setStatePropagator(boost::bind(&propagate, _1, _2, _3, _4));
+    ss.setStatePropagator(boost::bind(&propagate, _1, _2, _3, _4, uncertainty));
 
 
     // Specify the start and goal states

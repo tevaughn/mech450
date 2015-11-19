@@ -23,8 +23,7 @@ bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectang
 
 // This is our state validity checker.  It says every state is valid.
 bool stateAlwaysValid(const ompl::base::State* /*state*/)
-{
-	//std::cout << "HERE!\n" ;   
+{   
 	return true;
 }
 
@@ -103,6 +102,7 @@ int main(int, char **)
 	obstacles3.push_back(obstacle);
 
     int obstaclesNo;
+	int uncertainty;
 
     do 
 	{
@@ -116,24 +116,49 @@ int main(int, char **)
 		std::cin >> obstaclesNo;
 
 	} while (obstaclesNo < 1 || obstaclesNo > 4);
-    
+	
+	do
+	{
+        std::cout << "Use uncertainty: "<< std::endl;
+        std::cout << " (1) 0%" << std::endl;
+		std::cout << " (2) 3%" << std::endl;
+        std::cout << " (3) 5%" << std::endl;
+        std::cout << " (4) 10%" << std::endl;
+
+
+		std::cin >> uncertainty;
+
+	} while (uncertainty < 1 || uncertainty > 4);
+
+	switch(uncertainty)
+	{
+    	case 1: uncertainty = 0;
+		break;
+    	case 2: uncertainty = 3;
+		break;
+    	case 3: uncertainty = 5;
+		break;
+    	case 4: uncertainty = 10;
+		break;
+
+	}
     switch(obstaclesNo)
     {
         case 1:
             std::cout << "Running in empty environment\n";
-	        planWithSimpleSetupNeedle(none, -10, 10, 1, 5, -5, -5, 5, 5);
+	        planWithSimpleSetupNeedle(none, uncertainty, -10, 10, 1, 5, -5, -5, 5, 5);
         break;
         case 2:
             std::cout << "Running in H environment\n";
-	        planWithSimpleSetupNeedle(obstacles1, -10, 10, 1, 5, -5, -5, 5, 5);
+	        planWithSimpleSetupNeedle(obstacles1, uncertainty,-10, 10, 1, 5, -5, -5, 5, 5);
             break;
         case 3:
             std::cout << "Running in BLOCK environment\n";
-	        planWithSimpleSetupNeedle(obstacles2, -10, 10, 1, 5, -5, -5, 5, 5);
+	        planWithSimpleSetupNeedle(obstacles2, uncertainty,-10, 10, 1, 5, -5, -5, 5, 5);
             break;
         case 4:
             std::cout << "Running in small obstacles environment\n";
-	        planWithSimpleSetupNeedle(obstacles3, -10, 10, 1, 5, -5, -5, 5, 5);
+	        planWithSimpleSetupNeedle(obstacles3, uncertainty,-10, 10, 1, 5, -5, -5, 5, 5);
         break;
         }
 
