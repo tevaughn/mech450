@@ -14,14 +14,14 @@ void propagate(const ompl::base::State *start, const ompl::control::Control *con
     //const ompl::base::DiscreteStateSpace::StateType* d = state->as<ompl::base::DiscreteStateSpace::StateType>(1);
     
     const ompl::control::RealVectorControlSpace::ControlType* rctrl = control->as<ompl::control::RealVectorControlSpace::ControlType>();
-
+	std::cout << duration << "\n";
 	// +- 10% uncertainty
 	const double uncertainty = (rand()%(uncertaintyRange*2) + (100 - uncertaintyRange))/100.0; 
 	const double r = rctrl->values[0] * uncertainty;
     const double b = rctrl->values[1];
     
     double theta = se2->getYaw();
-    double w = duration/r;
+    double w = duration*0.01/r;
 
 
     if (b == LEFT) {
@@ -116,8 +116,6 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles, int unce
 	ss.setStateValidityChecker(boost::bind(&isStateValid, ss.getSpaceInformation().get(), _1, obstacles));
 
 	// Set propagation routine
-	//ompl::control::ODESolverPtr odeSolver(new ompl::control::ODEBasicSolver<> (ss.getSpaceInformation(), &NeedleODE));
-	//ss.setStatePropagator(ompl::control::ODESolver::getStatePropagator(odeSolver, &NeedlePostIntegration));
     ss.setStatePropagator(boost::bind(&propagate, _1, _2, _3, _4, uncertainty));
 
 
@@ -127,7 +125,7 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles, int unce
     start->as<ompl::base::SE2StateSpace::StateType>(0)->setX(startX);
     start->as<ompl::base::SE2StateSpace::StateType>(0)->setY(startY);
     start->as<ompl::base::SE2StateSpace::StateType>(0)->setYaw(0.0);
-    //start->as<ompl::base::DiscreteStateSpace::StateType>(1)->value = 0;
+    start->as<ompl::base::DiscreteStateSpace::StateType>(1)->value = 0;
 
 
 
@@ -135,16 +133,14 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles, int unce
 
     goal->as<ompl::base::SE2StateSpace::StateType>(0)->setX(goalX);
     goal->as<ompl::base::SE2StateSpace::StateType>(0)->setY(goalY);
-    //goal->as<ompl::base::SE2StateSpace::StateType>(0)->setYaw(0.0);
-    //goal->as<ompl::base::DiscreteStateSpace::StateType>(1)->value = 0;
+    goal->as<ompl::base::SE2StateSpace::StateType>(0)->setYaw(0.0);
+    goal->as<ompl::base::DiscreteStateSpace::StateType>(1)->value = 0;
 
     // set the start and goal states
     ss.setStartAndGoalStates(start, goal);
 	ss.setup();
 
     // Specify a planning algorithm to use
-
-
 	ompl::base::PlannerPtr planner(new ompl::control::SMR(ss.getSpaceInformation(), controls, 1000, 5));
 
 	ss.setPlanner(planner);
@@ -159,17 +155,16 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles, int unce
         // print the path to screen
         ompl::geometric::PathGeometric path = ss.getSolutionPath().asGeometric();
         path.interpolate(50);
-		std::cout << "print\n";
         path.printAsMatrix(std::cout);
 
 
         // print path to file
         std::ofstream fout("path.txt");
-		std::cout << "b\n";
+
         path.printAsMatrix(fout);
-		std::cout << "a\n";
+
         fout.close();
-		std::cout << "c\n";
+
     } else {
         std::cout << "No solution found" << std::endl;
     }
