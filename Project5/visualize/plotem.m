@@ -11,7 +11,7 @@ close all
 
 A = dlmread('path.txt');
 % A is now:
-% [ x y theta rotated ]
+% [ x y theta rotated ];
 % we ignore theta when printing
 % we change colors if we change direction
 
@@ -22,21 +22,22 @@ wh = 1;
 
 %plotObstacles(1) %street
 %plotObstacles(2) %block
-plotObstacles(3) %small obstacles
+%plotObstacles(3); %small obstacles
+
+plotObstacles(4);
 
 % draw all points in blue
 for i = 1:length(A)
   if A(i,4) == 0
-    style = 'b'
+    style = 'b';
   else
-    style = 'm'
+    style = 'c';
   end  
   plot(A(i,1),A(i,2),style);
 end
 
 % redraw start in green
-DrawRectangle([A(1,1), A(1,2), wh, wh, A(1,3)], 'g');
+plot(A(1,1),A(1,1),'g');
 
 % redraw goal in red
-DrawRectangle([A(i,1), A(i,2), wh, wh, A(i,3)], 'r');
-
+plot(A(i,1),A(i,2),'r');
