@@ -33,12 +33,12 @@ void propagate(const ompl::base::State *start, const ompl::control::Control *con
     double yout = (se2->getY() + r*sin(yawout));
     double bout = b;
 
-    //std::cout << r << " r" << "xb" << se2->getX() << " yb " << se2->getY() << " xa " << xout << " ya " << yout << "yaw " << theta << "yawa" << yawout << "\n";
-
     ompl::base::CompoundStateSpace::StateType* out = result->as<ompl::base::CompoundStateSpace::StateType>();
     ompl::base::SE2StateSpace::StateType* se2out = out->as<ompl::base::SE2StateSpace::StateType>(0);
     se2out->setXY(xout, yout);
     se2out->setYaw(yawout);
+	
+	
 
     ompl::base::SO2StateSpace::StateType* so2out = se2out->as<ompl::base::SO2StateSpace::StateType>(1);
     ompl::base::SO2StateSpace SO2;
@@ -159,20 +159,20 @@ void planWithSimpleSetupNeedle(const std::vector<Rectangle>& obstacles, int unce
         // print the path to screen
         ompl::geometric::PathGeometric path = ss.getSolutionPath().asGeometric();
         path.interpolate(50);
+		std::cout << "print\n";
         path.printAsMatrix(std::cout);
 
 
         // print path to file
         std::ofstream fout("path.txt");
-
+		std::cout << "b\n";
         path.printAsMatrix(fout);
+		std::cout << "a\n";
         fout.close();
+		std::cout << "c\n";
     } else {
         std::cout << "No solution found" << std::endl;
     }
-
-
-	
 	
 }
 

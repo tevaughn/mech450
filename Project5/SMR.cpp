@@ -162,37 +162,34 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
         for (base::State *state : sampledStates) {
             for (Control *control : controls) {
                 for (int j = 0; j < m_; j++) {
-                    //std::cout << j << "\n";
 			        addstate = si_->allocState();
 
                     siC_->propagate(state, control, 1, addstate);
-                
-                    bool foundState = false;
-                    for (base::State *checkstate :  sampledStates) {
-                        if (checkstate != state) {
-                            ompl::base::CompoundState *addc = addstate->as<ompl::base::CompoundState>();
-                            ompl::base::SE2StateSpace::StateType* addSE2 = addc->as<ompl::base::SE2StateSpace::StateType>(0);
-                            ompl::base::CompoundState *checkc = checkstate->as<ompl::base::CompoundState>();
-                            ompl::base::SE2StateSpace::StateType* checkSE2 = checkc->as<ompl::base::SE2StateSpace::StateType>(0);
-
-                            //std::cout << checkSE2->getX() << " " << addSE2->getX() << " " << checkSE2->getY() << " " << addSE2->getY() << " " << checkSE2->getYaw() << " " << addSE2->getYaw() << "\n";
-                            if (std::abs(checkSE2->getX() - addSE2->getX()) < 1 && 
-                                std::abs(checkSE2->getY() - addSE2->getY()) < 1 && 
-                                std::abs(checkSE2->getYaw() - addSE2->getYaw()) < 30) {
+                	if (si_->getStateValidityChecker()->isValid(addstate)) {
+		                bool foundState = false;
+		                for (base::State *checkstate :  sampledStates) {
+		                    if (checkstate != state) {
+		                        ompl::base::CompoundState *addc = addstate->as<ompl::base::CompoundState>();
+		                        ompl::base::SE2StateSpace::StateType* addSE2 = addc->as<ompl::base::SE2StateSpace::StateType>(0);
+		                        ompl::base::CompoundState *checkc = checkstate->as<ompl::base::CompoundState>();
+		                        ompl::base::SE2StateSpace::StateType* checkSE2 = checkc->as<ompl::base::SE2StateSpace::StateType>(0);
 
 
-                                //std::cout << checkstate << "\n";
-                                tprobs[state][control][checkstate] += 1;
-                                foundState = true;
-                                break;
-                            } 
-                        }
-                    }	
+		                        if (std::abs(checkSE2->getX() - addSE2->getX()) < 1 && 
+		                            std::abs(checkSE2->getY() - addSE2->getY()) < 1 && 
+		                            std::abs(checkSE2->getYaw() - addSE2->getYaw()) < 30) {
 
-                    if (!foundState) {
-                        std::cout << "found nothing close\n";
-                        //j--;
-                    }			
+		                            tprobs[state][control][checkstate] += 1;
+		                            foundState = true;
+		                            break;
+		                        } 
+		                    }
+		                }	
+
+		                if (!foundState) {
+		                    //std::cout << "found nothing close\n";
+		                }
+					}			
                 }
             }
         }
@@ -519,7 +516,6 @@ void ompl::control::SMR::computeOptimalPolicy( std::map<base::State*, Control*> 
 			}
 		}
 	}
-
 
     double maxQ = -std::numeric_limits<double>::infinity();
 	double q = 0;
