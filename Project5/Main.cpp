@@ -1,3 +1,4 @@
+
 #include "Main.h"
 
 using namespace ompl;
@@ -23,8 +24,7 @@ bool isValidStatePoint(const ompl::base::State* state, const std::vector<Rectang
 
 // This is our state validity checker.  It says every state is valid.
 bool stateAlwaysValid(const ompl::base::State* /*state*/)
-{
-	//std::cout << "HERE!\n" ;   
+{   
 	return true;
 }
 
@@ -82,27 +82,88 @@ int main(int, char **)
     std::vector<Rectangle> obstacles3;
 
 	//1
-	obstacle.x = -8;
+	obstacle.x = -6;
 	obstacle.y = -4;
-	obstacle.width = 2;
-	obstacle.height = 3;
+	obstacle.width = 1;
+	obstacle.height = 1;
 	obstacles3.push_back(obstacle);
 
 	//2
-	obstacle.x = 2;
-	obstacle.y = -2;
+	obstacle.x = -1.5;
+	obstacle.y = -5;
 	obstacle.width = 3;
 	obstacle.height = 3;
 	obstacles3.push_back(obstacle);
 
 	//3
-	obstacle.x = 7;
+	obstacle.x = -5;
+	obstacle.y = 2.5;
+	obstacle.width = 4.5;
+	obstacle.height = .5;
+	obstacles3.push_back(obstacle);
+
+	
+	//4
+	obstacle.x = -3.25;
+	obstacle.y = -1;
+	obstacle.width = 6;
+	obstacle.height = .5;
+	obstacles3.push_back(obstacle);
+
+	//5
+	obstacle.x = 3;
 	obstacle.y = 6;
-	obstacle.width = 3;
+	obstacle.width = 2;
+	obstacle.height = 3;
+	obstacles3.push_back(obstacle);
+
+	//6
+	obstacle.x = -3;
+	obstacle.y = -4;
+	obstacle.width = 1;
 	obstacle.height = 2;
 	obstacles3.push_back(obstacle);
 
+	
+	//7
+	obstacle.x = 2;
+	obstacle.y = -6;
+	obstacle.width = 1;
+	obstacle.height = 2;
+	obstacles3.push_back(obstacle);
+
+	//8
+	obstacle.x = -1.25;
+	obstacle.y = -8.5;
+	obstacle.width = 1;
+	obstacle.height = 2;
+	obstacles3.push_back(obstacle);
+
+	//9
+	obstacle.x = -4.75;
+	obstacle.y = 4;
+	obstacle.width = 1.5;
+	obstacle.height = 5;
+	obstacles3.push_back(obstacle);
+
+
+	//10
+	obstacle.x = -4.25;
+	obstacle.y = -2;
+	obstacle.width = .5;
+	obstacle.height = 2;
+	obstacles3.push_back(obstacle);
+
+	//11
+	obstacle.x = -1;
+	obstacle.y = 4;
+	obstacle.width = 3;
+	obstacle.height = 4;
+	obstacles3.push_back(obstacle);
+	
+
     int obstaclesNo;
+	int uncertainty;
 
     do 
 	{
@@ -116,24 +177,49 @@ int main(int, char **)
 		std::cin >> obstaclesNo;
 
 	} while (obstaclesNo < 1 || obstaclesNo > 4);
-    
+	
+	do
+	{
+        std::cout << "Use uncertainty: "<< std::endl;
+        std::cout << " (1) 0%" << std::endl;
+		std::cout << " (2) 3%" << std::endl;
+        std::cout << " (3) 5%" << std::endl;
+        std::cout << " (4) 10%" << std::endl;
+
+
+		std::cin >> uncertainty;
+
+	} while (uncertainty < 1 || uncertainty > 4);
+
+	switch(uncertainty)
+	{
+    	case 1: uncertainty = 0;
+		break;
+    	case 2: uncertainty = 3;
+		break;
+    	case 3: uncertainty = 5;
+		break;
+    	case 4: uncertainty = 10;
+		break;
+
+	}
     switch(obstaclesNo)
     {
         case 1:
             std::cout << "Running in empty environment\n";
-	        planWithSimpleSetupNeedle(none, -10, 10, 1, 5, -5, -5, 5, 5);
+	        planWithSimpleSetupNeedle(none, uncertainty, -10, 10, 1, 5, -5, -5, 5, 5);
         break;
         case 2:
             std::cout << "Running in H environment\n";
-	        planWithSimpleSetupNeedle(obstacles1, -10, 10, 1, 5, -5, -5, 5, 5);
+	        planWithSimpleSetupNeedle(obstacles1, uncertainty,-10, 10, 1, 5, -5, -5, 5, 5);
             break;
         case 3:
             std::cout << "Running in BLOCK environment\n";
-	        planWithSimpleSetupNeedle(obstacles2, -10, 10, 1, 5, -5, -5, 5, 5);
+	        planWithSimpleSetupNeedle(obstacles2, uncertainty,-10, 10, 1, 5, -5, -5, 5, 5);
             break;
         case 4:
             std::cout << "Running in small obstacles environment\n";
-	        planWithSimpleSetupNeedle(obstacles3, -10, 10, 1, 5, -5, -5, 5, 5);
+	        planWithSimpleSetupNeedle(obstacles3, uncertainty,-10, 10, 1, 5, -5, -5, 5, 5);
         break;
         }
 
