@@ -181,10 +181,10 @@ int main(int, char **)
 	do
 	{
         std::cout << "Use uncertainty: "<< std::endl;
-        std::cout << " (1) 0%" << std::endl;
-		std::cout << " (2) 3%" << std::endl;
-        std::cout << " (3) 5%" << std::endl;
-        std::cout << " (4) 10%" << std::endl;
+        std::cout << " (1) 1%" << std::endl;
+		std::cout << " (2) 5%" << std::endl;
+        std::cout << " (3) 10%" << std::endl;
+        std::cout << " (4) 50%" << std::endl;
 
 
 		std::cin >> uncertainty;
@@ -193,13 +193,13 @@ int main(int, char **)
 
 	switch(uncertainty)
 	{
-    	case 1: uncertainty = 0;
+    	case 1: uncertainty = 1;
 		break;
-    	case 2: uncertainty = 3;
+    	case 2: uncertainty = 5;
 		break;
-    	case 3: uncertainty = 50;
+    	case 3: uncertainty = 10;
 		break;
-    	case 4: uncertainty = 10;
+    	case 4: uncertainty = 50;
 		break;
 
 	}
