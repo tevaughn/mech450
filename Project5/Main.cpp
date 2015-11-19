@@ -1,3 +1,4 @@
+
 #include "Main.h"
 
 using namespace ompl;
@@ -81,25 +82,85 @@ int main(int, char **)
     std::vector<Rectangle> obstacles3;
 
 	//1
-	obstacle.x = -8;
+	obstacle.x = -6;
 	obstacle.y = -4;
-	obstacle.width = 2;
-	obstacle.height = 3;
+	obstacle.width = 1;
+	obstacle.height = 1;
 	obstacles3.push_back(obstacle);
 
 	//2
-	obstacle.x = 2;
-	obstacle.y = -2;
+	obstacle.x = -1.5;
+	obstacle.y = -5;
 	obstacle.width = 3;
 	obstacle.height = 3;
 	obstacles3.push_back(obstacle);
 
 	//3
-	obstacle.x = 7;
+	obstacle.x = -5;
+	obstacle.y = 2.5;
+	obstacle.width = 4.5;
+	obstacle.height = .5;
+	obstacles3.push_back(obstacle);
+
+	
+	//4
+	obstacle.x = -3.25;
+	obstacle.y = -1;
+	obstacle.width = 6;
+	obstacle.height = .5;
+	obstacles3.push_back(obstacle);
+
+	//5
+	obstacle.x = 3;
 	obstacle.y = 6;
-	obstacle.width = 3;
+	obstacle.width = 2;
+	obstacle.height = 3;
+	obstacles3.push_back(obstacle);
+
+	//6
+	obstacle.x = -3;
+	obstacle.y = -4;
+	obstacle.width = 1;
 	obstacle.height = 2;
 	obstacles3.push_back(obstacle);
+
+	
+	//7
+	obstacle.x = 2;
+	obstacle.y = -6;
+	obstacle.width = 1;
+	obstacle.height = 2;
+	obstacles3.push_back(obstacle);
+
+	//8
+	obstacle.x = -1.25;
+	obstacle.y = -8.5;
+	obstacle.width = 1;
+	obstacle.height = 2;
+	obstacles3.push_back(obstacle);
+
+	//9
+	obstacle.x = -4.75;
+	obstacle.y = 4;
+	obstacle.width = 1.5;
+	obstacle.height = 5;
+	obstacles3.push_back(obstacle);
+
+
+	//10
+	obstacle.x = -4.25;
+	obstacle.y = -2;
+	obstacle.width = .5;
+	obstacle.height = 2;
+	obstacles3.push_back(obstacle);
+
+	//11
+	obstacle.x = -1;
+	obstacle.y = 4;
+	obstacle.width = 3;
+	obstacle.height = 4;
+	obstacles3.push_back(obstacle);
+	
 
     int obstaclesNo;
 	int uncertainty;
