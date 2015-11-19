@@ -61,12 +61,6 @@ int main(int, char **)
 	obstacle.height = 8;
 	obstacles1.push_back(obstacle);
 
-	//4
-	obstacle.x = -10;
-	obstacle.y = 6;
-	obstacle.width = 20;
-	obstacle.height = 2;
-	obstacles1.push_back(obstacle);
 
 	//Block environment
     std::vector<Rectangle> obstacles2;
