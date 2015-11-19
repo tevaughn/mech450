@@ -203,11 +203,12 @@ int main(int, char **)
 		break;
 
 	}
+
     switch(obstaclesNo)
     {
         case 1:
             std::cout << "Running in empty environment\n";
-	        planWithSimpleSetupNeedle(none, uncertainty, -10, 10, 1, 5, -5, -5, 5, 5);
+	        planWithSimpleSetupNeedle(none, uncertainty, -10, 10, 0.5, 2.5, -5, -5, 5, 5);
 			std::cout << "fin\n";
         break;
         case 2:
