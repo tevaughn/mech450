@@ -194,9 +194,9 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
         for (base::State *state : sampledStates) {
             for (std::pair<Control*, std::map<base::State*, double>> control : tprobs[state]) {
                 for (std::pair<base::State*, double> otherState : control.second) {
-                    std::cout << tprobs[state][control.first][otherState.first] << "\n";
+                    //std::cout << tprobs[state][control.first][otherState.first] << "\n";
                     tprobs[state][control.first][otherState.first] /= m_;
-                    std::cout << tprobs[state][control.first][otherState.first] << "\n";
+                    //std::cout << tprobs[state][control.first][otherState.first] << "\n";
                 }
             }
         }
@@ -226,7 +226,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
         while (!itsAMatch) {
             itsAMatch = true;
             //computeOptimalPolicy(v, &pi, goal);
-            std::cout << "policy\n";
+            //std::cout << "policy\n";
             std::map<base::State*, double> newV;
             // for (std::pair<base::State*, double> state : v) {
             //     std::cout << "state: " << state.first << "\n";
@@ -238,7 +238,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
             // }
             // v = newV;
 
-            std::cout << v.size() << "\n";
+           //std::cout << v.size() << "\n";
             for (base::State *state: sampledStates) {
                 //std::cout << state << "\n";
                 double maxQ = -std::numeric_limits<double>::infinity();
@@ -250,7 +250,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
                         //std::cout << "p=" << nextstate.second << " v=" << v[nextstate.first] << " product=" << nextstate.second*v[nextstate.first] << "\n";
                         //std::cout << (std::find(v.begin(), v.end(), nextstate) == v.end()) << "\n";
                         if (nextstate.second*v[nextstate.first] > 1 ) {//[nextstate.first] > 0) {
-                            std::cout << "p=" << nextstate.second << " v=" << v[nextstate.first] << " product=" << nextstate.second*v[nextstate.first] << "\n"; 
+                            //std::cout << "p=" << nextstate.second << " v=" << v[nextstate.first] << " product=" << nextstate.second*v[nextstate.first] << "\n"; 
                         }
                         q += (nextstate.second * v[nextstate.first]);
                     }
@@ -272,7 +272,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 //                    std::cout << "GOAL STATE\n";
                     reward = 1.0;
                     maxQ = 0;
- //                   std::cout << reward + maxQ << "\n";
+ //                   //std::cout << reward + maxQ << "\n";
                 }
 
                 newV[state] = reward + maxQ;
@@ -289,7 +289,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
             }  
             v = newV;
-            std::cout << "pi done " << itsAMatch << "\n";
+            //std::cout << "pi done " << itsAMatch << "\n";
         }
 
 
@@ -317,9 +317,9 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
         Motion *lastmotion = NULL;
         bool solved = false;
 
-        std::cout << "V\n";
+       // std::cout << "V\n";
         for (auto state: sampledStates) {
-            std::cout << v[state] << "\n";
+            //std::cout << v[state] << "\n";
         }
 		
         curstate = rmotion->state;
@@ -340,30 +340,33 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
 			Control *ctrl = siC_->allocControl();
 			ctrl = pi[curstate];
-            siC_->propagate(curstate, ctrl, 1, nextstate);
-
-			if (si_->getStateValidityChecker()->isValid(nextstate)) {
-
-		        for (base::State *checkstate :  sampledStates) {
-		            if (checkstate != curstate) {
-		                ompl::base::CompoundState *addc = nextstate->as<ompl::base::CompoundState>();
-		                ompl::base::SE2StateSpace::StateType* addSE2 = addc->as<ompl::base::SE2StateSpace::StateType>(0);
-		                ompl::base::CompoundState *checkc = checkstate->as<ompl::base::CompoundState>();
-		                ompl::base::SE2StateSpace::StateType* checkSE2 = checkc->as<ompl::base::SE2StateSpace::StateType>(0);
-
-		                //std::cout << checkSE2->getX() << " " << addSE2->getX() << " " << checkSE2->getY() << " " << addSE2->getY() << " " << checkSE2->getYaw() << " " << addSE2->getYaw() << "\n";
-		                if (std::abs(checkSE2->getX() - addSE2->getX()) < 1 && 
-		                    std::abs(checkSE2->getY() - addSE2->getY()) < 1 && 
-		                    std::abs(checkSE2->getYaw() - addSE2->getYaw()) < 30) {
-
-
-		                    //std::cout << checkstate << "\n";
-		                    nextstate = checkstate;
-		                    break;
-		                } 
-		            }
-		        }   
+			
+			siC_->propagate(curstate, ctrl, 1, nextstate);
+			while ( !(si_->getStateValidityChecker()->isValid(nextstate))) {
+				 siC_->propagate(curstate, ctrl, 1, nextstate);
 			}
+           
+
+	        for (base::State *checkstate :  sampledStates) {
+	            if (checkstate != curstate) {
+	                ompl::base::CompoundState *addc = nextstate->as<ompl::base::CompoundState>();
+	                ompl::base::SE2StateSpace::StateType* addSE2 = addc->as<ompl::base::SE2StateSpace::StateType>(0);
+	                ompl::base::CompoundState *checkc = checkstate->as<ompl::base::CompoundState>();
+	                ompl::base::SE2StateSpace::StateType* checkSE2 = checkc->as<ompl::base::SE2StateSpace::StateType>(0);
+
+	                //std::cout << checkSE2->getX() << " " << addSE2->getX() << " " << checkSE2->getY() << " " << addSE2->getY() << " " << checkSE2->getYaw() << " " << addSE2->getYaw() << "\n";
+	                if (std::abs(checkSE2->getX() - addSE2->getX()) < 1 && 
+	                    std::abs(checkSE2->getY() - addSE2->getY()) < 1 && 
+	                    std::abs(checkSE2->getYaw() - addSE2->getYaw()) < 30) {
+
+
+	                    //std::cout << checkstate << "\n";
+	                    nextstate = checkstate;
+	                    break;
+	                } 
+	            }
+	        }   
+			
 
     		//const ompl::base::CompoundState *state = nextstate->as<ompl::base::CompoundState>();
     		//const ompl::base::SE2StateSpace::StateType* se2 = state->as<ompl::base::SE2StateSpace::StateType>(0);
@@ -390,7 +393,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
             solved = goal->isSatisfied(nextstate, &dist);
 
-            std::cout << "check solved " << dist << "\n";
+            //std::cout << "check solved " << dist << "\n";
             if (solved) {
                 finished = true;
                 approxdif = dist;
@@ -404,26 +407,26 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
             curstate = nextstate;
         }
 
-        std::cout << "we made it boys\n";
+        //std::cout << "we made it boys\n";
         PathControl *path = new PathControl(si_);
         for (int i = 0; i < mpath.size() ; ++i) {
-            std::cout << "i " << i << "\n";
+            //std::cout << "i " << i << "\n";
             if (mpath[i]->parent) {
-                std::cout << "parent exists\n";
-                std::cout << mpath[i]->state << "\n";
-                std::cout << mpath[i]->control << "\n";
-                std::cout << mpath[i]->steps << "\n";
+                //std::cout << "parent exists\n";
+                //std::cout << mpath[i]->state << "\n";
+                //std::cout << mpath[i]->control << "\n";
+                //std::cout << mpath[i]->steps << "\n";
                 Control *control = siC_->allocControl();
                 path->append(mpath[i]->state, control, mpath[i]->steps * siC_->getPropagationStepSize());
             }
             else {
-                std::cout << "orphan\n";
+                //std::cout << "orphan\n";
                 path->append(mpath[i]->state);
             }
         }
-        std::cout << "so close i can almost feel it\n";
+        //std::cout << "so close i can almost feel it\n";
         pdef_->addSolutionPath(base::PathPtr(path), true, approxdif, getName());
-        std::cout << "mama we made it\n";      
+        //std::cout << "mama we made it\n";      
 		return base::PlannerStatus(solved, true);
     }
 

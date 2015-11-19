@@ -14,7 +14,7 @@ void propagate(const ompl::base::State *start, const ompl::control::Control *con
     //const ompl::base::DiscreteStateSpace::StateType* d = state->as<ompl::base::DiscreteStateSpace::StateType>(1);
     
     const ompl::control::RealVectorControlSpace::ControlType* rctrl = control->as<ompl::control::RealVectorControlSpace::ControlType>();
-	std::cout << duration << "\n";
+
 	// +- 10% uncertainty
 	const double uncertainty = (rand()%(uncertaintyRange*2) + (100 - uncertaintyRange))/100.0; 
 	const double r = rctrl->values[0] * uncertainty;
@@ -54,6 +54,10 @@ bool isStateValid(const ompl::control::SpaceInformation *si, const ompl::base::S
     const ompl::base::CompoundState *compoundState = state->as<ompl::base::CompoundState>();
     const ompl::base::SE2StateSpace::StateType *se2state = compoundState->as<ompl::base::SE2StateSpace::StateType>(0);
 	const ompl::base::RealVectorStateSpace::StateType *pos = se2state->as<ompl::base::RealVectorStateSpace::StateType>(0);
+
+	if ((abs(se2state->getX()) > 10 || abs(se2state->getY()) > 10) && si->satisfiesBounds(state) ) {
+		std::cout << se2state->getX() << " " << se2state->getY() << " "  << si->satisfiesBounds(state) << "\n";
+	}
 
 	return si->satisfiesBounds(state) && isValidStatePoint(pos, obstacles);
 }
