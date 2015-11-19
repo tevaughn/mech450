@@ -208,6 +208,7 @@ int main(int, char **)
         case 1:
             std::cout << "Running in empty environment\n";
 	        planWithSimpleSetupNeedle(none, uncertainty, -10, 10, 1, 5, -5, -5, 5, 5);
+			std::cout << "fin\n";
         break;
         case 2:
             std::cout << "Running in H environment\n";
@@ -222,7 +223,7 @@ int main(int, char **)
 	        planWithSimpleSetupNeedle(obstacles3, uncertainty,-10, 10, 1, 5, -5, -5, 5, 5);
         break;
         }
-
+	std::cout << "here\n";
     return 0;
 }
 

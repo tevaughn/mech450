@@ -108,22 +108,6 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
     std::vector<base::State *> sampledStates;
 
-    while (const base::State *st = pis_.nextStart())
-    {
-		base::State *addstate;
-		addstate = si_->allocState();
-        si_->copyState(addstate, st);
-		sampledStates.push_back(addstate);
-
-    }
-
-    if (!sampler_)
-        sampler_ = si_->allocStateSampler();
-    if (!controlSampler_)
-        controlSampler_ = siC_->allocDirectedControlSampler();
-
-    //OMPL_INFORM("%s: Starting planning with %u states already in datastructure", getName().c_str(), nn_->size());
-
     Motion *solution  = NULL;
     Motion *approxsol = NULL;
     double  approxdif = std::numeric_limits<double>::infinity();
@@ -133,7 +117,20 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
     Control       *rctrl = rmotion->control;
     base::State  *xstate = si_->allocState();
 
- 
+    const base::State *st = pis_.nextStart();
+	si_->copyState(rstate, st);
+    
+	base::State *addstate;
+	addstate = si_->allocState();
+    si_->copyState(addstate, st);
+	sampledStates.push_back(addstate);
+
+
+    if (!sampler_)
+        sampler_ = si_->allocStateSampler();
+    if (!controlSampler_)
+        controlSampler_ = siC_->allocDirectedControlSampler();
+
 
     while (ptc == false)
     {
@@ -193,7 +190,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
                 }
             }
         }
-        std::cout <<"PROBS\n";
+
         for (base::State *state : sampledStates) {
             for (std::pair<Control*, std::map<base::State*, double>> control : tprobs[state]) {
                 for (std::pair<base::State*, double> otherState : control.second) {
@@ -203,8 +200,6 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
                 }
             }
         }
-        std::cout << "NO MO PROBS\n";
-
 
 
 
@@ -346,51 +341,51 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 			Control *ctrl = siC_->allocControl();
 			ctrl = pi[curstate];
             siC_->propagate(curstate, ctrl, 1, nextstate);
-            for (base::State *checkstate :  sampledStates) {
-                if (checkstate != curstate) {
-                    ompl::base::CompoundState *addc = nextstate->as<ompl::base::CompoundState>();
-                    ompl::base::SE2StateSpace::StateType* addSE2 = addc->as<ompl::base::SE2StateSpace::StateType>(0);
-                    ompl::base::CompoundState *checkc = checkstate->as<ompl::base::CompoundState>();
-                    ompl::base::SE2StateSpace::StateType* checkSE2 = checkc->as<ompl::base::SE2StateSpace::StateType>(0);
 
-                    //std::cout << checkSE2->getX() << " " << addSE2->getX() << " " << checkSE2->getY() << " " << addSE2->getY() << " " << checkSE2->getYaw() << " " << addSE2->getYaw() << "\n";
-                    if (std::abs(checkSE2->getX() - addSE2->getX()) < 1 && 
-                        std::abs(checkSE2->getY() - addSE2->getY()) < 1 && 
-                        std::abs(checkSE2->getYaw() - addSE2->getYaw()) < 30) {
+			if (si_->getStateValidityChecker()->isValid(nextstate)) {
+
+		        for (base::State *checkstate :  sampledStates) {
+		            if (checkstate != curstate) {
+		                ompl::base::CompoundState *addc = nextstate->as<ompl::base::CompoundState>();
+		                ompl::base::SE2StateSpace::StateType* addSE2 = addc->as<ompl::base::SE2StateSpace::StateType>(0);
+		                ompl::base::CompoundState *checkc = checkstate->as<ompl::base::CompoundState>();
+		                ompl::base::SE2StateSpace::StateType* checkSE2 = checkc->as<ompl::base::SE2StateSpace::StateType>(0);
+
+		                //std::cout << checkSE2->getX() << " " << addSE2->getX() << " " << checkSE2->getY() << " " << addSE2->getY() << " " << checkSE2->getYaw() << " " << addSE2->getYaw() << "\n";
+		                if (std::abs(checkSE2->getX() - addSE2->getX()) < 1 && 
+		                    std::abs(checkSE2->getY() - addSE2->getY()) < 1 && 
+		                    std::abs(checkSE2->getYaw() - addSE2->getYaw()) < 30) {
 
 
-                        //std::cout << checkstate << "\n";
-                        nextstate = checkstate;
-                        break;
-                    } 
-                }
-            }   
+		                    //std::cout << checkstate << "\n";
+		                    nextstate = checkstate;
+		                    break;
+		                } 
+		            }
+		        }   
+			}
 
-    		const ompl::base::CompoundState *state = nextstate->as<ompl::base::CompoundState>();
-    		const ompl::base::SE2StateSpace::StateType* se2 = state->as<ompl::base::SE2StateSpace::StateType>(0);
+    		//const ompl::base::CompoundState *state = nextstate->as<ompl::base::CompoundState>();
+    		//const ompl::base::SE2StateSpace::StateType* se2 = state->as<ompl::base::SE2StateSpace::StateType>(0);
 
-			std::cout << se2->getX() << " " << se2->getY() << " " << se2->getYaw() << "\n";
+
+			//const ompl::control::RealVectorControlSpace::ControlType* nctrl = ctrl->as<ompl::control::RealVectorControlSpace::ControlType>();
+			//std::cout << nctrl->values[0] << " " << nctrl->values[1] << " \n";
 			
-			const ompl::control::RealVectorControlSpace::ControlType* nctrl = ctrl->as<ompl::control::RealVectorControlSpace::ControlType>();
-			std::cout << nctrl->values[0] << " " << nctrl->values[1] << " \n";
-			
-
-            //std::cout << "propagated\n";
 
             /* create a motion */
             Motion *motion = new Motion(siC_);
             si_->copyState(motion->state, curstate);
 
-			//Control* control = siC_->allocControl();
+
 			motion->control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0] = ctrl->as<ompl::control::RealVectorControlSpace::ControlType>()->values[0];
 			motion->control->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1] = ctrl->as<ompl::control::RealVectorControlSpace::ControlType>()->values[1];
 
-			//std::cout << "copied\n";
+
             motion->steps = 1;
             motion->parent = lastmotion;
             nn_->add(motion);
             mpath.push_back(motion);
-			//std::cout << "pushed \n";
             lastmotion = motion;
 
             solved = goal->isSatisfied(nextstate, &dist);
@@ -408,6 +403,7 @@ ompl::base::PlannerStatus ompl::control::SMR::solve(const base::PlannerTerminati
 
             curstate = nextstate;
         }
+
         std::cout << "we made it boys\n";
         PathControl *path = new PathControl(si_);
         for (int i = 0; i < mpath.size() ; ++i) {
